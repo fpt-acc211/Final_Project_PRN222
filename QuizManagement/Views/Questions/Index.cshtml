@@ -1,0 +1,64 @@
+@model IEnumerable<BusinessObjects.Question>
+@{
+    var deck = (BusinessObjects.Deck)ViewBag.Deck;
+    ViewData["Title"] = "Câu hỏi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Câu hỏi</h1>
+        <p class="text-muted mb-0">@deck.Subject.Name / @deck.Name</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Decks" asp-action="Index" asp-route-subjectId="@deck.SubjectId" class="btn btn-outline-secondary">Bộ đề</a>
+        <a asp-action="Create" asp-route-deckId="@deck.Id" class="btn btn-primary">Tạo câu hỏi</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Chưa có câu hỏi nào trong bộ đề này.</div>
+}
+else
+{
+    <div class="vstack gap-3">
+        @foreach (var question in Model)
+        {
+            <div class="border rounded p-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold">@question.Content</div>
+                        <div class="small text-muted">
+                            @(question.QuestionType == 1 ? "Một đáp án đúng" : "Nhiều đáp án đúng")
+                            · @question.Answers.Count đáp án
+                        </div>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                        <a asp-action="Edit" asp-route-id="@question.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                        <form asp-action="Delete" asp-route-id="@question.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa câu hỏi này?');">Xóa</button>
+                        </form>
+                    </div>
+                </div>
+
+                <ul class="mt-3 mb-0">
+                    @foreach (var answer in question.Answers.OrderBy(a => a.Id))
+                    {
+                        <li class="@(answer.IsCorrect ? "text-success fw-semibold" : "")">
+                            @answer.Content
+                            @if (answer.IsCorrect)
+                            {
+                                <span class="badge bg-success ms-2">Đúng</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+}

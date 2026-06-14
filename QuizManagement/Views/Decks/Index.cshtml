@@ -1,0 +1,60 @@
+@model IEnumerable<BusinessObjects.Deck>
+@{
+    var subject = (BusinessObjects.Subject)ViewBag.Subject;
+    ViewData["Title"] = "Bộ đề";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Bộ đề</h1>
+        <p class="text-muted mb-0">@subject.Name</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Subjects" asp-action="Index" class="btn btn-outline-secondary">Môn học</a>
+        <a asp-action="Create" asp-route-subjectId="@subject.Id" class="btn btn-primary">Tạo bộ đề</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Chưa có bộ đề nào trong môn học này.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Tên bộ đề</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deck in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@deck.Id" class="fw-semibold text-decoration-none">
+                                @deck.Name
+                            </a>
+                        </td>
+                        <td>@deck.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-end">
+                            <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-primary">Câu hỏi</a>
+                            <a asp-action="Edit" asp-route-id="@deck.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                            <form asp-action="Delete" asp-route-id="@deck.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa bộ đề này và ẩn các câu hỏi liên quan?');">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
