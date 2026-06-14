@@ -1,0 +1,28 @@
+@model QuizManagement.ViewModels.Decks.DeckFormViewModel
+
+@{
+    ViewData["Title"] = "Tạo bộ đề";
+}
+
+<h1 class="h3 mb-1">Tạo bộ đề</h1>
+<p class="text-muted mb-4">@Model.SubjectName</p>
+
+<form asp-action="Create" method="post" class="col-md-6">
+    <input asp-for="SubjectId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Tên bộ đề</label>
+        <input asp-for="Name" class="form-control" autofocus />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a asp-action="Index" asp-route-subjectId="@Model.SubjectId" class="btn btn-outline-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
