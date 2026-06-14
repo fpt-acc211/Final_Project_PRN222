@@ -14,8 +14,9 @@ namespace Services
             _repository = repository;
         }
 
-        public IEnumerable<Subject> GetAllSubjects() => _repository.GetAllSubjects();
-        public Subject GetSubjectById(int id) => _repository.GetSubjectById(id);
+        public IEnumerable<Subject> GetSubjectsByUserId(string userId) => _repository.GetSubjectsByUserId(userId);
+        public Subject? GetSubjectById(int id, string userId) => _repository.GetSubjectById(id, userId);
+        public bool NameExists(string userId, string name, int? excludedId = null) => _repository.NameExists(userId, name, excludedId);
         public void AddSubject(Subject subject) => _repository.AddSubject(subject);
 
         // Sau này bạn có thể thêm các logic kiểm tra (validation) ở đây trước khi gọi Update/Delete
