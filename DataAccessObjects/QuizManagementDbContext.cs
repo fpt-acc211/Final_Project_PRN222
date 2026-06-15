@@ -48,6 +48,8 @@ public partial class QuizManagementDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Decks__3214EC07F540EDFA");
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
             entity.Property(e => e.CreatedBy).HasMaxLength(256);
             entity.Property(e => e.Name).HasMaxLength(255);
@@ -62,6 +64,8 @@ public partial class QuizManagementDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Question__3214EC079D8AB6B4");
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
             entity.Property(e => e.CreatedBy).HasMaxLength(256);
             entity.Property(e => e.QuestionType).HasDefaultValue(1);
@@ -75,6 +79,8 @@ public partial class QuizManagementDbContext : DbContext
         modelBuilder.Entity<Subject>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Subjects__3214EC073667D612");
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
 
             entity.HasIndex(e => new { e.Name, e.UserId }, "IX_Subjects_Name_UserId")
                 .IsUnique()

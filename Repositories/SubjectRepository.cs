@@ -15,26 +15,22 @@ namespace Repositories
             _context = context;
         }
 
-        public IEnumerable<Subject> GetAllSubjects() => _context.Subjects.ToList();
+        public IEnumerable<Subject> GetSubjectsByUserId(string userId)
+            => SubjectDAO.Instance.GetSubjectsByUserId(_context, userId);
 
-        public Subject GetSubjectById(int id) => _context.Subjects.FirstOrDefault(s => s.Id == id)!;
+        public Subject? GetSubjectById(int id, string userId)
+            => SubjectDAO.Instance.GetSubjectById(_context, id, userId);
+
+        public bool NameExists(string userId, string name, int? excludedId = null)
+            => SubjectDAO.Instance.NameExists(_context, userId, name, excludedId);
 
         public void AddSubject(Subject subject)
-        {
-            _context.Subjects.Add(subject);
-            _context.SaveChanges();
-        }
+            => SubjectDAO.Instance.AddSubject(_context, subject);
 
         public void UpdateSubject(Subject subject)
-        {
-            _context.Subjects.Update(subject);
-            _context.SaveChanges();
-        }
+            => SubjectDAO.Instance.UpdateSubject(_context, subject);
 
         public void DeleteSubject(Subject subject)
-        {
-            _context.Subjects.Remove(subject);
-            _context.SaveChanges();
-        }
+            => SubjectDAO.Instance.DeleteSubject(_context, subject);
     }
 }

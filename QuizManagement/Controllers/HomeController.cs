@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using BusinessObjects;
+using Microsoft.AspNetCore.Authorization;
 using System.Diagnostics;
 
 namespace QuizManagement.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
