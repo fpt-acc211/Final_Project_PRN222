@@ -1,8 +1,139 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<h1 class="h3 mb-4">Dashboard</h1>
+
+@* Thống kê tổng quan *@
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-subtitle text-muted mb-2">Số bài đã làm</h6>
+                <h2 class="card-title mb-0">@Model.TotalQuizzesTaken</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-subtitle text-muted mb-2">Điểm trung bình</h6>
+                <h2 class="card-title mb-0 @(Model.AveragePercentage >= 50 ? "text-success" : Model.TotalQuizzesTaken > 0 ? "text-danger" : "")">
+                    @if (Model.TotalQuizzesTaken > 0)
+                    {
+                        @Model.AveragePercentage.ToString("0.#")<text>%</text>
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-subtitle text-muted mb-2">Lần làm gần nhất</h6>
+                <h6 class="card-title mb-0">
+                    @if (Model.LastQuizDate.HasValue)
+                    {
+                        @Model.LastQuizDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    }
+                    else
+                    {
+                        <text>Chưa có</text>
+                    }
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    @* Lịch sử gần đây *@
+    <div class="col-md-7 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Bài quiz gần đây</h5>
+                @if (Model.RecentHistories.Any())
+                {
+                    <a asp-controller="History" asp-action="Index" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                }
+            </div>
+            <div class="card-body">
+                @if (!Model.RecentHistories.Any())
+                {
+                    <p class="text-muted mb-0">Bạn chưa làm bài quiz nào. Hãy chọn một bộ đề để bắt đầu!</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Bộ đề</th>
+                                    <th class="text-center">Điểm</th>
+                                    <th>Ngày</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var h in Model.RecentHistories)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@h.Deck.Name</div>
+                                            <small class="text-muted">@h.Deck.Subject.Name</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge @(h.Percentage >= 50 ? "bg-success" : "bg-danger")">
+                                                @h.Score.ToString("0.##")/10
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>@h.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-controller="History" asp-action="Details" asp-route-id="@h.Id"
+                                               class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Danh sách Môn học *@
+    <div class="col-md-5 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Môn học của bạn</h5>
+                <a asp-controller="Subjects" asp-action="Index" class="btn btn-sm btn-outline-primary">Quản lý</a>
+            </div>
+            <div class="card-body">
+                @if (!Model.Subjects.Any())
+                {
+                    <p class="text-muted mb-0">Bạn chưa có môn học nào. <a asp-controller="Subjects" asp-action="Create">Tạo mới</a>.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var subject in Model.Subjects)
+                        {
+                            <a asp-controller="Decks" asp-action="Index" asp-route-subjectId="@subject.Id"
+                               class="list-group-item list-group-item-action">
+                                @subject.Name
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>

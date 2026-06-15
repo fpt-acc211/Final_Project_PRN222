@@ -46,11 +46,17 @@ else
                         </td>
                         <td>@deck.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                         <td class="text-end">
-                            <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-primary">Câu hỏi</a>
-                            <a asp-action="Edit" asp-route-id="@deck.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                            <form asp-action="Delete" asp-route-id="@deck.Id" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa bộ đề này và ẩn các câu hỏi liên quan?');">Xóa</button>
-                            </form>
+                            <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                <a asp-controller="Quiz" asp-action="Config" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-success">Làm bài</a>
+                                <a asp-controller="Flashcards" asp-action="Study" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-info">Flashcard</a>
+                                <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-primary">Câu hỏi</a>
+                                <a asp-controller="DeckExport" asp-action="Word" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-secondary">Word</a>
+                                <a asp-controller="DeckExport" asp-action="Pdf" asp-route-deckId="@deck.Id" class="btn btn-sm btn-outline-secondary">PDF</a>
+                                <a asp-action="Edit" asp-route-id="@deck.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@deck.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa bộ đề này và ẩn các câu hỏi liên quan?');">Xóa</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }

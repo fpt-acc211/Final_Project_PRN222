@@ -1,6 +1,7 @@
-using BusinessObjects;
+﻿using BusinessObjects;
 using DataAccessObjects;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Repositories
 {
@@ -8,6 +9,7 @@ namespace Repositories
     {
         private readonly QuizManagementDbContext _context;
 
+        // Tiêm DbContext vào (Khắc phục hoàn toàn lỗi Pseudo-DI)
         public SubjectRepository(QuizManagementDbContext context)
         {
             _context = context;

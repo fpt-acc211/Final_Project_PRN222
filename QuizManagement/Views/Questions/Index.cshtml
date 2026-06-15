@@ -9,8 +9,12 @@
         <h1 class="h3 mb-1">Câu hỏi</h1>
         <p class="text-muted mb-0">@deck.Subject.Name / @deck.Name</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap justify-content-end gap-2">
         <a asp-controller="Decks" asp-action="Index" asp-route-subjectId="@deck.SubjectId" class="btn btn-outline-secondary">Bộ đề</a>
+        <a asp-controller="QuestionImport" asp-action="Import" asp-route-deckId="@deck.Id" class="btn btn-outline-primary">Import</a>
+        <a asp-controller="Flashcards" asp-action="Study" asp-route-deckId="@deck.Id" class="btn btn-outline-info">Flashcard</a>
+        <a asp-controller="DeckExport" asp-action="Word" asp-route-deckId="@deck.Id" class="btn btn-outline-secondary">Word</a>
+        <a asp-controller="DeckExport" asp-action="Pdf" asp-route-deckId="@deck.Id" class="btn btn-outline-secondary">PDF</a>
         <a asp-action="Create" asp-route-deckId="@deck.Id" class="btn btn-primary">Tạo câu hỏi</a>
     </div>
 </div>
@@ -32,7 +36,7 @@ else
             <div class="border rounded p-3">
                 <div class="d-flex justify-content-between gap-3">
                     <div>
-                        <div class="fw-semibold">@question.Content</div>
+                        <div class="fw-semibold markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
                         <div class="small text-muted">
                             @(question.QuestionType == 1 ? "Một đáp án đúng" : "Nhiều đáp án đúng")
                             · @question.Answers.Count đáp án
@@ -50,7 +54,7 @@ else
                     @foreach (var answer in question.Answers.OrderBy(a => a.Id))
                     {
                         <li class="@(answer.IsCorrect ? "text-success fw-semibold" : "")">
-                            @answer.Content
+                            @SafeMarkdown.ToInlineHtml(answer.Content)
                             @if (answer.IsCorrect)
                             {
                                 <span class="badge bg-success ms-2">Đúng</span>
@@ -58,6 +62,11 @@ else
                         </li>
                     }
                 </ul>
+
+                @if (!string.IsNullOrWhiteSpace(question.Explanation))
+                {
+                    <div class="small text-muted mt-2 markdown-content">@SafeMarkdown.ToHtml(question.Explanation)</div>
+                }
             </div>
         }
     </div>

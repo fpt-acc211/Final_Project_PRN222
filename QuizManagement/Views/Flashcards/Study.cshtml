@@ -1,0 +1,158 @@
+@model FlashcardStudyViewModel
+@using System.Text.Encodings.Web
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Flashcard";
+    var json = JsonSerializer.Serialize(Model.Cards, new JsonSerializerOptions { Encoder = JavaScriptEncoder.Default });
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Flashcard</h1>
+        <p class="text-muted mb-0">@Model.SubjectName / @Model.DeckName</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Quiz" asp-action="Config" asp-route-deckId="@Model.DeckId" class="btn btn-outline-success">Làm quiz</a>
+        <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@Model.DeckId" class="btn btn-outline-secondary">Câu hỏi</a>
+    </div>
+</div>
+
+@if (!Model.Cards.Any())
+{
+    <div class="alert alert-info">Bộ đề này chưa có câu hỏi để học flashcard.</div>
+}
+else
+{
+    <div id="flashcardApp" class="flashcard-study mx-auto">
+        <div class="flashcard-toolbar">
+            <button type="button" id="prevCardButton" class="btn btn-outline-secondary">Trước</button>
+            <div class="text-center">
+                <div id="cardCounter" class="fw-semibold"></div>
+                <div id="studyCounter" class="small text-muted"></div>
+            </div>
+            <button type="button" id="nextCardButton" class="btn btn-outline-secondary">Tiếp</button>
+        </div>
+
+        <div id="flashcardSurface" class="flashcard-surface" role="button" tabindex="0">
+            <div class="flashcard-side-label" id="cardType"></div>
+            <div class="flashcard-question" id="questionText"></div>
+            <div id="answerPanel" class="flashcard-answer d-none">
+                <div class="fw-semibold mb-2">Đáp án đúng</div>
+                <ul id="answerList" class="mb-0"></ul>
+                <div id="explanationText" class="mt-3 text-muted"></div>
+            </div>
+        </div>
+
+        <div class="flashcard-actions">
+            <button type="button" id="revealButton" class="btn btn-primary px-4">Lật thẻ</button>
+            <button type="button" id="againButton" class="btn btn-outline-danger d-none">Cần học lại</button>
+            <button type="button" id="knownButton" class="btn btn-outline-success d-none">Đã nhớ</button>
+            <button type="button" id="shuffleButton" class="btn btn-outline-secondary">Trộn thẻ</button>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const cards = @Html.Raw(json);
+            let currentIndex = 0;
+            let revealed = false;
+            let knownCount = 0;
+            let againCount = 0;
+
+            const flashcardSurface = document.getElementById('flashcardSurface');
+            const questionText = document.getElementById('questionText');
+            const cardType = document.getElementById('cardType');
+            const answerPanel = document.getElementById('answerPanel');
+            const answerList = document.getElementById('answerList');
+            const explanationText = document.getElementById('explanationText');
+            const revealButton = document.getElementById('revealButton');
+            const againButton = document.getElementById('againButton');
+            const knownButton = document.getElementById('knownButton');
+            const shuffleButton = document.getElementById('shuffleButton');
+            const prevCardButton = document.getElementById('prevCardButton');
+            const nextCardButton = document.getElementById('nextCardButton');
+            const cardCounter = document.getElementById('cardCounter');
+            const studyCounter = document.getElementById('studyCounter');
+
+            function renderCard() {
+                const card = cards[currentIndex];
+                revealed = false;
+
+                questionText.textContent = card.Content || '';
+                cardType.textContent = card.QuestionType === 1 ? 'Một đáp án đúng' : 'Nhiều đáp án đúng';
+                answerList.textContent = '';
+
+                for (const answer of card.CorrectAnswers || []) {
+                    const item = document.createElement('li');
+                    item.textContent = answer;
+                    answerList.appendChild(item);
+                }
+
+                explanationText.textContent = card.Explanation ? 'Giải thích: ' + card.Explanation : '';
+                answerPanel.classList.add('d-none');
+                revealButton.classList.remove('d-none');
+                againButton.classList.add('d-none');
+                knownButton.classList.add('d-none');
+                cardCounter.textContent = `Thẻ ${currentIndex + 1}/${cards.length}`;
+                studyCounter.textContent = `${knownCount} đã nhớ · ${againCount} cần học lại`;
+            }
+
+            function revealCard() {
+                if (revealed) {
+                    return;
+                }
+
+                revealed = true;
+                answerPanel.classList.remove('d-none');
+                revealButton.classList.add('d-none');
+                againButton.classList.remove('d-none');
+                knownButton.classList.remove('d-none');
+            }
+
+            function move(delta) {
+                currentIndex = (currentIndex + delta + cards.length) % cards.length;
+                renderCard();
+            }
+
+            function markAndMove(isKnown) {
+                if (isKnown) {
+                    knownCount++;
+                } else {
+                    againCount++;
+                }
+                move(1);
+            }
+
+            function shuffleCards() {
+                for (let i = cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cards[i], cards[j]] = [cards[j], cards[i]];
+                }
+                currentIndex = 0;
+                renderCard();
+            }
+
+            revealButton.addEventListener('click', revealCard);
+            flashcardSurface.addEventListener('click', revealCard);
+            flashcardSurface.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    revealCard();
+                }
+                if (event.key === 'ArrowRight') {
+                    move(1);
+                }
+                if (event.key === 'ArrowLeft') {
+                    move(-1);
+                }
+            });
+            prevCardButton.addEventListener('click', () => move(-1));
+            nextCardButton.addEventListener('click', () => move(1));
+            againButton.addEventListener('click', () => markAndMove(false));
+            knownButton.addEventListener('click', () => markAndMove(true));
+            shuffleButton.addEventListener('click', shuffleCards);
+
+            renderCard();
+        })();
+    </script>
+}
