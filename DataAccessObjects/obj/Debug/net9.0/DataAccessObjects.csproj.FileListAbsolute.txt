@@ -13,3 +13,4 @@ E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSyste
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\DataAccessObjects\obj\Debug\net9.0\refint\DataAccessObjects.dll
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\DataAccessObjects\obj\Debug\net9.0\DataAccessObjects.pdb
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\DataAccessObjects\obj\Debug\net9.0\ref\DataAccessObjects.dll
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\DataAccessObjects\obj\Debug\net9.0\DataAccessObjects.sourcelink.json

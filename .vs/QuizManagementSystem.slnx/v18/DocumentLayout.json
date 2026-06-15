@@ -3,16 +3,28 @@
   "WorkspaceRootPath": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|solutionrelative:quizmanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|solutionrelative:quizmanagement\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{76171565-ACBB-4E69-BB9B-F7393ACC7F1E}|DataAccessObjects\\DataAccessObjects.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\dataaccessobjects\\questiondao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{76171565-ACBB-4E69-BB9B-F7393ACC7F1E}|DataAccessObjects\\DataAccessObjects.csproj|solutionrelative:dataaccessobjects\\questiondao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{76171565-ACBB-4E69-BB9B-F7393ACC7F1E}|DataAccessObjects\\DataAccessObjects.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\dataaccessobjects\\deckdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{76171565-ACBB-4E69-BB9B-F7393ACC7F1E}|DataAccessObjects\\DataAccessObjects.csproj|solutionrelative:dataaccessobjects\\deckdao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\views\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|solutionrelative:quizmanagement\\views\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|solutionrelative:quizmanagement\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|solutionrelative:quizmanagement\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A603E282-C63A-0F97-4F46-24CBF6269875}|QuizManagement\\QuizManagement.csproj|e:\\coding ide\\back-end\\microsoft visual studio\\final_project\\quizmanagementsystem\\quizmanagement\\views\\shared\\error.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -78,11 +90,47 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\appsettings.json",
+              "RelativeDocumentMoniker": "QuizManagement\\appsettings.json",
+              "ToolTip": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\appsettings.json",
+              "RelativeToolTip": "QuizManagement\\appsettings.json",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-15T07:04:55.995Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "QuestionDAO.cs",
+              "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\DataAccessObjects\\QuestionDAO.cs",
+              "RelativeDocumentMoniker": "DataAccessObjects\\QuestionDAO.cs",
+              "ToolTip": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\DataAccessObjects\\QuestionDAO.cs",
+              "RelativeToolTip": "DataAccessObjects\\QuestionDAO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-15T06:54:39.022Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DeckDAO.cs",
+              "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\DataAccessObjects\\DeckDAO.cs",
+              "RelativeDocumentMoniker": "DataAccessObjects\\DeckDAO.cs",
+              "ToolTip": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\DataAccessObjects\\DeckDAO.cs",
+              "RelativeToolTip": "DataAccessObjects\\DeckDAO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-15T06:53:48.501Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "_ViewImports.cshtml",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\Views\\_ViewImports.cshtml",
               "RelativeDocumentMoniker": "QuizManagement\\Views\\_ViewImports.cshtml",
@@ -90,25 +138,24 @@
               "RelativeToolTip": "QuizManagement\\Views\\_ViewImports.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-31T14:02:28.848Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T14:02:28.848Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\Program.cs",
               "RelativeDocumentMoniker": "QuizManagement\\Program.cs",
               "ToolTip": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\Program.cs",
               "RelativeToolTip": "QuizManagement\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAewGEAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-31T13:40:02.534Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "HomeController.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\Controllers\\HomeController.cs",
               "RelativeDocumentMoniker": "QuizManagement\\Controllers\\HomeController.cs",
@@ -116,12 +163,11 @@
               "RelativeToolTip": "QuizManagement\\Controllers\\HomeController.cs",
               "ViewState": "AgIAAAsAAAAAAAAAAAAjwBUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:39:35.796Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:39:35.796Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Error.cshtml",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\QuizManagement\\Views\\Shared\\Error.cshtml",
               "RelativeDocumentMoniker": "QuizManagement\\Views\\Shared\\Error.cshtml",
@@ -129,12 +175,11 @@
               "RelativeToolTip": "QuizManagement\\Views\\Shared\\Error.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-31T13:38:58.405Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:38:58.405Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "SubjectService.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\Services\\SubjectService.cs",
               "RelativeDocumentMoniker": "Services\\SubjectService.cs",
@@ -142,12 +187,11 @@
               "RelativeToolTip": "Services\\SubjectService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:38:25.233Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:38:25.233Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "ISubjectService.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\Services\\ISubjectService.cs",
               "RelativeDocumentMoniker": "Services\\ISubjectService.cs",
@@ -155,12 +199,11 @@
               "RelativeToolTip": "Services\\ISubjectService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:38:20.562Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:38:20.562Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "SubjectRepository.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\Repositories\\SubjectRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\SubjectRepository.cs",
@@ -168,12 +211,11 @@
               "RelativeToolTip": "Repositories\\SubjectRepository.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:38:04.654Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:38:04.654Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "ISubjectRepository.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\Repositories\\ISubjectRepository.cs",
               "RelativeDocumentMoniker": "Repositories\\ISubjectRepository.cs",
@@ -181,12 +223,11 @@
               "RelativeToolTip": "Repositories\\ISubjectRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:37:52.992Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:37:52.992Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "QuizManagementDbContext.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\DataAccessObjects\\QuizManagementDbContext.cs",
               "RelativeDocumentMoniker": "DataAccessObjects\\QuizManagementDbContext.cs",
@@ -194,12 +235,11 @@
               "RelativeToolTip": "DataAccessObjects\\QuizManagementDbContext.cs",
               "ViewState": "AgIAABoAAAAAAAAAAAAswCAAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:56.262Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:56.262Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 13,
               "Title": "User.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\User.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\User.cs",
@@ -207,12 +247,11 @@
               "RelativeToolTip": "BusinessObjects\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:22.689Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:22.689Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 14,
               "Title": "TestResultDetail.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\TestResultDetail.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\TestResultDetail.cs",
@@ -220,12 +259,11 @@
               "RelativeToolTip": "BusinessObjects\\TestResultDetail.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:14.16Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:14.16Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 15,
               "Title": "TestHistory.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\TestHistory.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\TestHistory.cs",
@@ -233,12 +271,11 @@
               "RelativeToolTip": "BusinessObjects\\TestHistory.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:14.32Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:14.32Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 16,
               "Title": "Subject.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\Subject.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\Subject.cs",
@@ -246,12 +283,11 @@
               "RelativeToolTip": "BusinessObjects\\Subject.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:09.06Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:09.06Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 17,
               "Title": "Question.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\Question.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\Question.cs",
@@ -259,12 +295,11 @@
               "RelativeToolTip": "BusinessObjects\\Question.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:36:03.718Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:36:03.718Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 18,
               "Title": "Answer.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\Answer.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\Answer.cs",
@@ -272,12 +307,11 @@
               "RelativeToolTip": "BusinessObjects\\Answer.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAA8AAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:19:22.586Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:19:22.586Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "Deck.cs",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\Deck.cs",
               "RelativeDocumentMoniker": "BusinessObjects\\Deck.cs",
@@ -285,21 +319,19 @@
               "RelativeToolTip": "BusinessObjects\\Deck.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-31T13:19:21.752Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:19:21.752Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "BusinessObjects",
+              "DocumentIndex": 19,
+              "Title": "BusinessObjects.csproj",
               "DocumentMoniker": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\BusinessObjects.csproj",
               "RelativeDocumentMoniker": "BusinessObjects\\BusinessObjects.csproj",
               "ToolTip": "E:\\Coding IDE\\Back-end\\Microsoft Visual Studio\\Final_Project\\QuizManagementSystem\\BusinessObjects\\BusinessObjects.csproj",
               "RelativeToolTip": "BusinessObjects\\BusinessObjects.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-05-31T13:19:20.587Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-31T13:19:20.587Z"
             }
           ]
         }

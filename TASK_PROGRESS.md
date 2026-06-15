@@ -1,6 +1,6 @@
 ﻿# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-14
+Cập nhật gần nhất: 2026-06-15
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -28,7 +28,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | CRUD nội dung học tập | `[x]` | Đã có controller/views cho Subject, Deck, Question/Answer |
 | README/setup | `[x]` | README đã được chuẩn hóa, có hướng dẫn local config |
 | Git/local hygiene | `[x]` | `.gitignore` bỏ qua `Error.md`, `PRN222.md`, `bin/`, `obj/`, `.vs/`; `TASK_PROGRESS.md` được commit để team theo dõi |
-| Quiz engine | `[ ]` | Chưa có tạo bài, shuffle, chấm điểm, lưu lịch sử |
+| Quiz engine | `[x]` | Đã có tạo bài, shuffle Fisher-Yates, chấm điểm single/multiple choice, lưu lịch sử |
 | UI final | `[ ]` | Chưa có dark theme/glassmorphism theo kế hoạch |
 
 ## 3. Thứ Tự Ưu Tiên MVP
@@ -37,9 +37,9 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 2. Đăng ký, đăng nhập, đăng xuất bằng cookie authentication. `[x]`
 3. CRUD Subject và Deck theo đúng user đang đăng nhập. `[x]`
 4. CRUD Question và Answer, có validate single choice / multiple choice. `[x]`
-5. Tạo bài quiz theo Deck, shuffle câu hỏi và đáp án. `[ ]`
-6. Submit bài làm, chấm điểm, lưu `TestHistories` và `TestResultDetails`. `[ ]`
-7. Xem lịch sử làm bài và xem lại chi tiết kết quả. `[ ]`
+5. Tạo bài quiz theo Deck, shuffle câu hỏi và đáp án. `[x]`
+6. Submit bài làm, chấm điểm, lưu `TestHistories` và `TestResultDetails`. `[x]`
+7. Xem lịch sử làm bài và xem lại chi tiết kết quả. `[x]`
 8. Hoàn thiện UI, validation message, responsive. `[ ]`
 9. Làm bonus import/Markdown/thống kê nếu còn thời gian. `[B]`
 
@@ -120,30 +120,30 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| Tạo `QuizDAO` / query hỗ trợ quiz | `[ ]` | BE | Lấy câu hỏi theo Deck kèm Answers đúng scope user |
-| Tạo `QuizService` | `[ ]` | BE | Lấy câu hỏi theo Deck và số lượng câu hỏi |
-| Tạo ViewModels cho quiz | `[ ]` | BE | Không gửi `IsCorrect` ra client khi làm bài |
-| Tạo màn hình cấu hình bài test | `[ ]` | FE/BE | Chọn số lượng câu hỏi, validate min/max |
-| Xáo trộn câu hỏi bằng Fisher-Yates | `[ ]` | BE | Thứ tự câu hỏi thay đổi mỗi lần làm |
-| Xáo trộn đáp án bằng Fisher-Yates | `[ ]` | BE | Thứ tự đáp án thay đổi mỗi lần làm |
-| Tạo `QuizController` | `[ ]` | BE | Có Config/Start, Submit, Result |
-| Giao diện làm bài quiz | `[ ]` | FE | Chọn single/multiple answer rõ ràng, responsive |
-| Cảnh báo câu chưa trả lời khi submit | `[ ]` | FE | Người dùng được xác nhận trước khi nộp bài chưa hoàn tất |
-| Chấm điểm single choice | `[ ]` | BE | Chọn đúng đáp án thì được điểm |
-| Chấm điểm multiple choice | `[ ]` | BE | Đúng khi tập đáp án chọn trùng khớp tập đáp án đúng |
-| Lưu `TestHistories` | `[ ]` | BE | Lưu score, percentage, user, deck, created time |
-| Lưu `TestResultDetails` | `[ ]` | BE | Lưu từng câu hỏi, đáp án đã chọn, đúng/sai |
-| Hiển thị result sau submit | `[ ]` | FE/BE | Có điểm, tỷ lệ, đáp án đúng, explanation |
+| Tạo `QuizDAO` / query hỗ trợ quiz | `[x]` | BE | Lấy câu hỏi theo Deck kèm Answers đúng scope user |
+| Tạo `QuizService` | `[x]` | BE | Lấy câu hỏi theo Deck và số lượng câu hỏi |
+| Tạo ViewModels cho quiz | `[x]` | BE | Không gửi `IsCorrect` ra client khi làm bài |
+| Tạo màn hình cấu hình bài test | `[x]` | FE/BE | Chọn số lượng câu hỏi, validate min/max |
+| Xáo trộn câu hỏi bằng Fisher-Yates | `[x]` | BE | Thứ tự câu hỏi thay đổi mỗi lần làm |
+| Xáo trộn đáp án bằng Fisher-Yates | `[x]` | BE | Thứ tự đáp án thay đổi mỗi lần làm |
+| Tạo `QuizController` | `[x]` | BE | Có Config/Start, Submit, Result |
+| Giao diện làm bài quiz | `[x]` | FE | Chọn single/multiple answer rõ ràng, responsive |
+| Cảnh báo câu chưa trả lời khi submit | `[x]` | FE | Người dùng được xác nhận trước khi nộp bài chưa hoàn tất |
+| Chấm điểm single choice | `[x]` | BE | Chọn đúng đáp án thì được điểm |
+| Chấm điểm multiple choice | `[x]` | BE | Đúng khi tập đáp án chọn trùng khớp tập đáp án đúng |
+| Lưu `TestHistories` | `[x]` | BE | Lưu score, percentage, user, deck, created time |
+| Lưu `TestResultDetails` | `[x]` | BE | Lưu từng câu hỏi, đáp án đã chọn, đúng/sai |
+| Hiển thị result sau submit | `[x]` | FE/BE | Có điểm, tỷ lệ, đáp án đúng, explanation |
 
 ## 9. Phase 5 - History Và Dashboard
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| Tạo trang Dashboard | `[ ]` | FE/BE | Hiện subject/deck gần đây và thống kê cơ bản |
-| Tạo trang lịch sử làm bài | `[ ]` | FE/BE | Liệt kê các lần làm bài của user |
-| Tạo trang chi tiết lịch sử | `[ ]` | FE/BE | Xem lại câu hỏi, đáp án đã chọn, đáp án đúng |
-| Tính thống kê cơ bản | `[ ]` | BE | Số bài đã làm, điểm trung bình, lần làm gần nhất |
-| Chặn xem history của user khác | `[ ]` | BE | Mỗi user chỉ xem lịch sử của mình |
+| Tạo trang Dashboard | `[x]` | FE/BE | Hiện subject/deck gần đây và thống kê cơ bản |
+| Tạo trang lịch sử làm bài | `[x]` | FE/BE | Liệt kê các lần làm bài của user |
+| Tạo trang chi tiết lịch sử | `[x]` | FE/BE | Xem lại câu hỏi, đáp án đã chọn, đáp án đúng |
+| Tính thống kê cơ bản | `[x]` | BE | Số bài đã làm, điểm trung bình, lần làm gần nhất |
+| Chặn xem history của user khác | `[x]` | BE | Mỗi user chỉ xem lịch sử của mình |
 
 ## 10. Phase 6 - UI/UX Final
 
@@ -163,12 +163,12 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| `[B]` Import câu hỏi từ Excel | `[ ]` | BE | Đọc file, validate, preview trước khi import |
-| `[B]` Import câu hỏi từ text | `[ ]` | BE | Có format mẫu và báo lỗi dòng sai |
-| `[B]` Markdown cho nội dung câu hỏi | `[ ]` | BE/FE | Render an toàn, tránh XSS |
-| `[B]` Export deck ra PDF/Word | `[ ]` | BE | Tạo file tải về được |
-| `[B]` Thống kê điểm nâng cao | `[ ]` | BE/FE | Biểu đồ tiến trình học tập |
-| `[B]` Flashcard / spaced repetition | `[ ]` | BE/FE | Chỉ làm nếu MVP đã ổn định |
+| `[B]` Import câu hỏi từ Excel | `[x]` | BE | Đọc `.xlsx`, validate, preview trước khi import |
+| `[B]` Import câu hỏi từ text | `[x]` | BE | Có format mẫu và báo lỗi dòng sai |
+| `[B]` Markdown cho nội dung câu hỏi | `[x]` | BE/FE | Render an toàn bằng whitelist HTML sau khi encode input |
+| `[B]` Export deck ra PDF/Word | `[x]` | BE | Tạo file `.docx` và `.pdf` tải về được |
+| `[B]` Thống kê điểm nâng cao | `[x]` | BE/FE | Có dashboard thống kê, biểu đồ 12 lần làm gần nhất, group theo môn/bộ đề |
+| `[B]` Flashcard / spaced repetition | `[x]` | BE/FE | Có màn hình flashcard học theo deck với lịch ôn trong phiên |
 
 ## 12. Phase 8 - Bảo Mật Và Chất Lượng
 
@@ -177,7 +177,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Bật Anti-Forgery cho form POST | `[x]` | BE | Các POST hiện có dùng `[ValidateAntiForgeryToken]` |
 | Validate input server-side | `[x]` | BE | Auth và CRUD hiện có validate server-side bằng ViewModel/ModelState |
 | Kiểm tra ownership mọi query | `[x]` | BE | CRUD Subject/Deck/Question lọc theo user đang đăng nhập |
-| Không gửi đáp án đúng ra client trước submit | `[ ]` | BE | Sẽ thực hiện ở Phase 4 Quiz engine |
+| Không gửi đáp án đúng ra client trước submit | `[x]` | BE | QuizTakeViewModel không chứa IsCorrect |
 | Xử lý lỗi thân thiện | `[~]` | BE/FE | Có validation/NotFound cơ bản, cần error UX tốt hơn |
 | Kiểm tra N+1 query | `[~]` | BE | Có `Include` ở DAO; sẽ tối ưu thêm khi làm Quiz/History |
 | Test flow chính bằng tay | `[~]` | All | User đã test register/login; cần test CRUD end-to-end |
@@ -218,3 +218,6 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-14 | Naams2k10fpt | Phase 2: thêm custom cookie auth, register/login/logout, password hashing, role claims, auth views | Bước sau là Phase 3 CRUD Subject/Deck | User đã test đăng ký/đăng nhập được |
 | 2026-06-14 | Naams2k10fpt | Phase 3: thêm DAO layer theo mẫu `DAO.Instance`, CRUD Subject/Deck/Question/Answer, views và ownership checks | Test thực tế CRUD trên trình duyệt, sau đó sang Phase 4 Quiz engine | Build thành công; `/Subjects` redirect về Login khi chưa đăng nhập |
 | 2026-06-14 | Naams2k10fpt | Chuẩn bị push Git: chuẩn hóa README, thêm `.gitignore` cho local notes, bỏ password thật khỏi `appsettings.json`, thêm `appsettings.Local.example.json` | Tạo `appsettings.Local.json` trên máy local nếu cần chạy bằng password thật | Build thành công, 0 warning, 0 error |
+| 2026-06-15 | NguyenNgu2005 | Phase 4: Quiz Engine hoàn chỉnh - QuizDAO, QuizService (Fisher-Yates shuffle, chấm điểm single/multi choice), QuizController (Config/Take/Submit/Result), ViewModels (không lộ IsCorrect), Views (radio/checkbox, cảnh báo câu chưa trả lời) | Test flow quiz trên trình duyệt | Build thành công, 0 warning, 0 error |
+| 2026-06-15 | NguyenNgu2005 | Phase 5: Dashboard + History - trang Dashboard với thống kê (số bài, điểm TB, lần làm gần nhất), trang lịch sử làm bài, chi tiết xem lại bài đã làm, ownership check | Test dashboard và history trên trình duyệt | Build thành công, 0 warning, 0 error |
+| 2026-06-15 | NguyenNgu2005 | Phase 7: bonus sau MVP - import Excel/text có preview, Markdown an toàn, export Word/PDF, thống kê nâng cao, flashcard theo deck | Test lại flow import/export/quiz trên trình duyệt | Build thành công, 0 warning, 0 error |

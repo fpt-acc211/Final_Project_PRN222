@@ -31,6 +31,38 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 9.0
 build_property.EnableCodeStyleSeverity = 
 
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Decks/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVja3NcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Decks/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVja3NcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Decks/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVja3NcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Flashcards/Study.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRmxhc2hjYXJkc1xTdHVkeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/History/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGlzdG9yeVxEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/History/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSGlzdG9yeVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -39,12 +71,68 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/Import.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXEltcG9ydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/ImportPreview.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXEltcG9ydFByZXZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/_QuestionForm.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXF9RdWVzdGlvbkZvcm0uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Questions/_QuestionFormScripts.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25zXF9RdWVzdGlvbkZvcm1TY3JpcHRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Quiz/Config.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxDb25maWcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Quiz/Result.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxSZXN1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Quiz/Take.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxUYWtlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Statistics/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RhdGlzdGljc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Subjects/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ViamVjdHNcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Subjects/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ViamVjdHNcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/Subjects/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ViamVjdHNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [E:/Coding IDE/Back-end/Microsoft Visual Studio/Final_Project/QuizManagementSystem/QuizManagement/Views/_ViewImports.cshtml]

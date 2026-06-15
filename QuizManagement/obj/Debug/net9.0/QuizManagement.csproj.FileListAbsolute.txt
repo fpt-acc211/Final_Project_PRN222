@@ -143,7 +143,6 @@ E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSyste
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\scopedcss\bundle\QuizManagement.styles.css
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\scopedcss\projectbundle\QuizManagement.bundle.scp.css
-E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\compressed\5ojfurr1iw-{0}-b9sayid5wm-b9sayid5wm.gz
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\compressed\2864mhsxfc-{0}-61n19gt1b8-61n19gt1b8.gz
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\compressed\y4g6pyycij-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\compressed\otkbwn19zm-{0}-bqjiyaj88i-bqjiyaj88i.gz
@@ -212,7 +211,6 @@ E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSyste
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\staticwebassets.development.json
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\staticwebassets.build.endpoints.json
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\swae.build.ex.cache
-E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\QuizMana.B8CF7280.Up2Date
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\QuizManagement.dll
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\refint\QuizManagement.dll
@@ -227,3 +225,7 @@ E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSyste
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\bin\Debug\net9.0\DataAccessObjects.pdb
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\bin\Debug\net9.0\Repositories.pdb
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\bin\Debug\net9.0\Services.pdb
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\bin\Debug\net9.0\appsettings.Local.example.json
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\QuizManagement.sourcelink.json
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\compressed\5ojfurr1iw-{0}-jist6yq02o-jist6yq02o.gz
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\QuizManagement\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

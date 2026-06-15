@@ -15,3 +15,4 @@ E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSyste
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\Repositories\obj\Debug\net9.0\refint\Repositories.dll
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\Repositories\obj\Debug\net9.0\Repositories.pdb
 E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\Repositories\obj\Debug\net9.0\ref\Repositories.dll
+E:\Coding IDE\Back-end\Microsoft Visual Studio\Final_Project\QuizManagementSystem\Repositories\obj\Debug\net9.0\Repositories.sourcelink.json

@@ -29,3 +29,213 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+.markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content code,
+.form-check-label code {
+  background: rgba(13, 110, 253, 0.08);
+  border-radius: 4px;
+  padding: 0.1rem 0.25rem;
+}
+
+.progress-chart {
+  min-height: 220px;
+}
+
+.chart-axis {
+  stroke: #6c757d;
+  stroke-width: 1.5;
+}
+
+.chart-grid {
+  stroke: #dee2e6;
+  stroke-width: 1;
+}
+
+.chart-line {
+  fill: none;
+  stroke: #0d6efd;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-point {
+  fill: #0d6efd;
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.chart-label {
+  fill: #6c757d;
+  font-size: 12px;
+}
+.quizlet-editor {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.quizlet-panel {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.quizlet-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.quizlet-main-input {
+  font-size: 1.05rem;
+  resize: vertical;
+}
+
+.quizlet-answer-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.quizlet-answer-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: stretch;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #f8f9fa;
+}
+
+.quizlet-answer-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 700;
+  align-self: center;
+}
+
+.quizlet-answer-content textarea {
+  resize: vertical;
+}
+
+.quizlet-answer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.correct-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-weight: 600;
+  color: #198754;
+}
+
+.sticky-action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(6px);
+}
+
+.flashcard-study {
+  max-width: 820px;
+}
+
+.flashcard-toolbar,
+.flashcard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.flashcard-actions {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.flashcard-surface {
+  min-height: 360px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.flashcard-surface:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.18), 0 0.5rem 1.5rem rgba(15, 23, 42, 0.08);
+}
+
+.flashcard-side-label {
+  color: #6c757d;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.flashcard-question {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.flashcard-answer {
+  margin-top: 1.5rem;
+  border-top: 1px solid #dee2e6;
+  padding-top: 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+  .quizlet-panel-header,
+  .flashcard-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quizlet-answer-row {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .quizlet-answer-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .flashcard-surface {
+    min-height: 300px;
+    padding: 1.25rem;
+  }
+
+  .flashcard-question {
+    font-size: 1.25rem;
+  }
+}

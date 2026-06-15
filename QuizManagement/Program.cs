@@ -7,25 +7,37 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cấu hình cấu trúc file cấu hình local (nếu có) và logging
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-// Subcribe Dbcontext
+// 1. Đăng ký DbContext với Connection String từ appsettings
 builder.Services.AddDbContext<QuizManagementDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Subcribe Repository và Service
+// 2. Đăng ký Dependency Injection cho Repository và Service
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
+
 builder.Services.AddScoped<IDeckRepository, DeckRepository>();
 builder.Services.AddScoped<IDeckService, DeckService>();
+
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IQuizService, QuizService>();
+
+builder.Services.AddScoped<IQuestionImportService, QuestionImportService>();
+builder.Services.AddSingleton<IDeckExportService, DeckExportService>();
+
+// 3. Cấu hình Cookie Authentication & Data Protection (Tránh lỗi mất session khi restart app)
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys")));
 
@@ -40,22 +52,49 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Add services to the container.
+// 4. Thêm dịch vụ MVC (Controllers với Views)
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ==================== PHẦN KIỂM TRA KẾT NỐI DATABASE ====================
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<QuizManagementDbContext>();
+        logger.LogInformation("⏳ Đang kiểm tra kết nối tới Database...");
+
+        if (context.Database.CanConnect())
+        {
+            logger.LogInformation("✅ Kết nối Database thành công! Sẵn sàng chạy ứng dụng.");
+        }
+        else
+        {
+            logger.LogError("❌ Không thể kết nối tới Database. Vui lòng kiểm tra lại Connection String hoặc SQL Server.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "💥 Đã xảy ra lỗi nghiêm trọng khi cố gắng kết nối Database!");
+    }
+}
+// ========================================================================
+
+// Cấu hình HTTP request pipeline (Middleware)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // Giá trị HSTS mặc định là 30 ngày.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Thứ tự Middleware Authentication và Authorization phải chính xác
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -65,6 +104,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

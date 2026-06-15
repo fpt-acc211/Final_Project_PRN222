@@ -4,68 +4,9 @@
     ViewData["Title"] = "Tạo câu hỏi";
 }
 
-<h1 class="h3 mb-1">Tạo câu hỏi</h1>
-<p class="text-muted mb-4">@Model.SubjectName / @Model.DeckName</p>
-
-<form asp-action="Create" method="post">
-    <input asp-for="DeckId" type="hidden" />
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <div class="mb-3">
-        <label asp-for="Content" class="form-label">Nội dung câu hỏi</label>
-        <textarea asp-for="Content" class="form-control" rows="4" autofocus></textarea>
-        <span asp-validation-for="Content" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="QuestionType" class="form-label">Loại câu hỏi</label>
-        <select asp-for="QuestionType" class="form-select">
-            <option value="1">Một đáp án đúng</option>
-            <option value="2">Nhiều đáp án đúng</option>
-        </select>
-        <span asp-validation-for="QuestionType" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Explanation" class="form-label">Giải thích</label>
-        <textarea asp-for="Explanation" class="form-control" rows="3"></textarea>
-    </div>
-
-    <h2 class="h5 mt-4">Đáp án</h2>
-    <span asp-validation-for="Answers" class="text-danger"></span>
-
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th style="width: 70%;">Nội dung</th>
-                    <th>Đáp án đúng</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (var i = 0; i < Model.Answers.Count; i++)
-                {
-                    <tr>
-                        <td>
-                            <input asp-for="Answers[i].Id" type="hidden" />
-                            <input asp-for="Answers[i].Content" class="form-control" />
-                            <span asp-validation-for="Answers[i].Content" class="text-danger"></span>
-                        </td>
-                        <td>
-                            <input asp-for="Answers[i].IsCorrect" class="form-check-input" />
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Lưu</button>
-        <a asp-action="Index" asp-route-deckId="@Model.DeckId" class="btn btn-outline-secondary">Hủy</a>
-    </div>
-</form>
+<partial name="_QuestionForm" model="Model" />
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <partial name="_QuestionFormScripts" />
 }
