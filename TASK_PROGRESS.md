@@ -1,6 +1,6 @@
 ﻿# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-15
+Cập nhật gần nhất: 2026-06-21
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -29,7 +29,8 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | README/setup | `[x]` | README đã được chuẩn hóa, có hướng dẫn local config |
 | Git/local hygiene | `[x]` | `.gitignore` bỏ qua `Error.md`, `PRN222.md`, `bin/`, `obj/`, `.vs/`; `TASK_PROGRESS.md` được commit để team theo dõi |
 | Quiz engine | `[x]` | Đã có tạo bài, shuffle Fisher-Yates, chấm điểm single/multiple choice, lưu lịch sử |
-| UI final | `[ ]` | Chưa có dark theme/glassmorphism theo kế hoạch |
+| UI final | `[x]` | Dark Theme + Glassmorphism hoàn tất; readability cải thiện đạt WCAG AA |
+| Admin panel | `[x]` | Admin/Index, Admin/Users, phân quyền Policy `AdminOnly` |
 
 ## 3. Thứ Tự Ưu Tiên MVP
 
@@ -40,8 +41,8 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 5. Tạo bài quiz theo Deck, shuffle câu hỏi và đáp án. `[x]`
 6. Submit bài làm, chấm điểm, lưu `TestHistories` và `TestResultDetails`. `[x]`
 7. Xem lịch sử làm bài và xem lại chi tiết kết quả. `[x]`
-8. Hoàn thiện UI, validation message, responsive. `[ ]`
-9. Làm bonus import/Markdown/thống kê nếu còn thời gian. `[B]`
+8. Hoàn thiện UI, validation message, responsive. `[x]`
+9. Làm bonus import/Markdown/thống kê nếu còn thời gian. `[x]`
 
 ## 4. Phase 0 - Nền Tảng Và Vệ Sinh Project
 
@@ -78,7 +79,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Cấu hình Cookie Authentication trong `Program.cs` | `[x]` | BE | `UseAuthentication()` đặt trước `UseAuthorization()` |
 | Gán claim UserId/Role khi login | `[x]` | BE | Cookie có UserId, Username, Email, Role |
 | Thêm `[Authorize]` cho màn hình cần đăng nhập | `[x]` | BE | `HomeController` yêu cầu đăng nhập, Account Login/Register cho phép anonymous |
-| Phân quyền User/Admin cơ bản | `[~]` | BE | Đã có Role claim; sẽ enforce thêm khi có màn hình Admin/User cụ thể |
+| Phân quyền User/Admin cơ bản | `[x]` | BE | Đã enforce Policy `AdminOnly`; Admin panel `/Admin/Index`, `/Admin/Users` yêu cầu Role = Admin |
 
 ## 7. Phase 3 - CRUD Nội Dung Học Tập
 
@@ -149,15 +150,36 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| Chốt Bootstrap hay Tailwind | `[x]` | Team | Đang dùng Bootstrap theo template MVC |
-| Thiết kế `_Layout.cshtml` | `[~]` | FE | Navbar/login state đã có; cần polish UI sau |
-| Tạo dark theme | `[ ]` | FE | Màu sắc dễ đọc, không lỗi contrast |
-| Áp dụng glassmorphism có tiết chế | `[ ]` | FE | Card/panel đẹp nhưng không làm rối mắt |
-| Tạo form style dùng chung | `[~]` | FE | Form CRUD dùng Bootstrap, cần polish thêm |
-| Tạo table/list style dùng chung | `[~]` | FE | List/table CRUD dùng Bootstrap, cần polish thêm |
-| Thêm toast/alert | `[~]` | FE | Đã có alert cơ bản qua `TempData` |
-| Kiểm tra responsive | `[ ]` | FE | Desktop, tablet, mobile không vỡ layout |
-| Kiểm tra empty states | `[x]` | FE | Subject/Deck/Question có empty state cơ bản |
+| Chốt Bootstrap hay Tailwind | `[x]` | Team | Bootstrap 5 dark mode + CSS custom properties |
+| Thiết kế `_Layout.cshtml` | `[x]` | FE | Glassmorphism navbar, Google Fonts (Inter), nav-avatar badge, page-content wrapper |
+| Tạo dark theme | `[x]` | FE | CSS token system trong `site.css`; tất cả view dùng `--bg`, `--surface`, `--text`, `--accent` |
+| Áp dụng glassmorphism có tiết chế | `[x]` | FE | Card dùng `backdrop-filter: blur(12px)` với fallback; không làm chậm trên thiết bị cũ |
+| Redesign Login / Register | `[x]` | FE | `auth-page` layout fullscreen, `auth-brand`, `auth-card`; fix lỗi frame do CSS stacking context |
+| Redesign Home/Dashboard | `[x]` | FE | `stat-card--purple/cyan/green`, bảng lịch sử gần đây, danh sách môn học |
+| Redesign Subjects/Index | `[x]` | FE | `item-grid` thay bảng, `item-card__actions` |
+| Redesign Decks/Index | `[x]` | FE | `item-grid`, breadcrumb với accent link |
+| Redesign Quiz/Take | `[x]` | FE | `quiz-sticky-header`, progress bar, `answer-option` checkbox/radio, visual feedback câu đã trả lời |
+| Redesign Quiz/Result | `[x]` | FE | `score-ring` pass/fail, `result-card--correct/wrong`, hiển thị đáp án đã chọn/đáp án đúng |
+| Redesign Admin/Index | `[x]` | FE | `admin-stat` cards với SVG icon màu `icon-purple/cyan/green/yellow/red` |
+| Redesign Admin/Users | `[x]` | FE | `u-avatar` component, bảng người dùng cải tiến, badge vai trò |
+| Redesign Statistics/Index | `[x]` | FE | `stat-card` components, chart Y-axis labels hiển thị rõ |
+| Redesign Profile/Index | `[x]` | FE | Avatar fallback dùng accent color thay `bg-secondary`; fix chữ initials bị mờ |
+| Cải thiện readability (contrast) | `[x]` | FE | `--text-muted: #a8b8cc`, `--text-dim: #6b7e94`; chart label, dropdown, warning badge, placeholder đều đạt WCAG AA |
+| Tạo form style dùng chung | `[x]` | FE | Form auth và CRUD dùng token CSS, glass card style |
+| Tạo table/list style dùng chung | `[x]` | FE | Table dark, item-grid, breadcrumb đồng bộ toàn app |
+| Thêm toast/alert | `[x]` | FE | TempData alert có thể dismiss; màu sắc theo trạng thái |
+| Kiểm tra responsive | `[~]` | FE | Desktop hoạt động tốt; tablet/mobile cơ bản ổn, chưa kiểm tra đầy đủ |
+| Kiểm tra empty states | `[x]` | FE | Tất cả list/table có empty state với text muted rõ ràng |
+
+## 10b. Phase 6b - Admin Panel
+
+| Task | Trạng thái | Owner | Tiêu chí hoàn thành |
+| --- | --- | --- | --- |
+| Tạo `AdminController` | `[x]` | BE | Yêu cầu Policy `AdminOnly`; action Index + Users |
+| Dashboard Admin | `[x]` | BE/FE | Hiện tổng user, môn học, bộ đề, câu hỏi, lần làm bài |
+| Quản lý người dùng | `[x]` | BE/FE | Xem danh sách user; admin có thể thay đổi Role |
+| Khóa / mở khóa tài khoản | `[x]` | BE | Đã có `IsLocked` và `SecurityStamp`-based session invalidation |
+| Tạo tài khoản Admin đầu tiên | `[!]` | BE | Cần seed hoặc tạo thủ công; chưa có UI self-signup cho Admin |
 
 ## 11. Phase 7 - Bonus Sau MVP
 
@@ -221,3 +243,5 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-15 | NguyenNgu2005 | Phase 4: Quiz Engine hoàn chỉnh - QuizDAO, QuizService (Fisher-Yates shuffle, chấm điểm single/multi choice), QuizController (Config/Take/Submit/Result), ViewModels (không lộ IsCorrect), Views (radio/checkbox, cảnh báo câu chưa trả lời) | Test flow quiz trên trình duyệt | Build thành công, 0 warning, 0 error |
 | 2026-06-15 | NguyenNgu2005 | Phase 5: Dashboard + History - trang Dashboard với thống kê (số bài, điểm TB, lần làm gần nhất), trang lịch sử làm bài, chi tiết xem lại bài đã làm, ownership check | Test dashboard và history trên trình duyệt | Build thành công, 0 warning, 0 error |
 | 2026-06-15 | NguyenNgu2005 | Phase 7: bonus sau MVP - import Excel/text có preview, Markdown an toàn, export Word/PDF, thống kê nâng cao, flashcard theo deck | Test lại flow import/export/quiz trên trình duyệt | Build thành công, 0 warning, 0 error |
+| 2026-06-21 | locphan8541 | Phase 6 UI/UX hoàn tất - redesign toàn bộ 12 view với Dark Theme + Glassmorphism: Layout, Login, Register, Home, Subjects, Decks, Quiz/Take, Quiz/Result, Admin, Statistics, Profile | Kiểm tra responsive trên mobile, chuẩn bị demo data | 54 files thay đổi, +3929/-643 lines; push lên branch `feature/phase2-redesign` |
+| 2026-06-21 | locphan8541 | Fix lỗi auth page frame (CSS stacking context từ `transform` trên animation), fix avatar Profile, cải thiện readability toàn app (WCAG AA contrast tokens) | Kiểm tra toàn bộ màn hình trên nhiều độ phân giải | Đã xác nhận chạy trên http://localhost:5039 |
