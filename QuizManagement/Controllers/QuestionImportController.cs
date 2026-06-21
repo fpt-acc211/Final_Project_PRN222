@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "ManageContent")]
     public class QuestionImportController : Controller
     {
         private readonly IDeckService _deckService;

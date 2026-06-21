@@ -19,5 +19,14 @@ namespace Services
         public User? GetById(string id) => _repository.GetById(id);
 
         public void CreateUser(User user) => _repository.AddUser(user);
+
+        public void UpdateProfile(User user) => _repository.UpdateUser(user);
+
+        public void ChangePassword(User user, string newPasswordHash)
+        {
+            user.PasswordHash = newPasswordHash;
+            user.SecurityStamp = Guid.NewGuid().ToString();
+            _repository.UpdateUser(user);
+        }
     }
 }

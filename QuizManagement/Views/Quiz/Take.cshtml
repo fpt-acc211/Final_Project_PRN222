@@ -3,14 +3,21 @@
     ViewData["Title"] = "Làm bài quiz";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-1">Làm bài quiz</h1>
-        <p class="text-muted mb-0">@Model.SubjectName / @Model.DeckName · @Model.Questions.Count câu hỏi</p>
+<div class="quiz-sticky-header">
+    <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width:0;">
+        <div style="min-width:0;flex:1;">
+            <div class="fw-semibold" style="font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                @Model.SubjectName / @Model.DeckName
+            </div>
+        </div>
+        <span id="answeredBadge" class="badge bg-primary" style="font-size:.82rem;padding:.35rem .7rem;flex-shrink:0;">
+            0 / @Model.Questions.Count đã trả lời
+        </span>
     </div>
-    <div>
-        <span id="answeredCount" class="badge bg-primary fs-6">0/@Model.Questions.Count đã trả lời</span>
-    </div>
+</div>
+
+<div class="quiz-progress-track mt-0 mb-4">
+    <div id="quizProgressBar" class="quiz-progress-bar" style="width:0%"></div>
 </div>
 
 <form asp-action="Submit" method="post" id="quizForm">
@@ -21,61 +28,57 @@
         @for (int i = 0; i < Model.Questions.Count; i++)
         {
             var question = Model.Questions[i];
-            <div class="card" id="question-@i">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h5 class="card-title mb-0">
-                            <span class="badge bg-secondary me-2">Câu @(i + 1)</span>
-                            @if (question.QuestionType == 2)
-                            {
-                                <span class="badge bg-info">Nhiều đáp án</span>
-                            }
-                        </h5>
-                    </div>
+            <div class="question-card" id="question-@i">
+                <div class="question-label">
+                    <span class="question-num">Câu @(i + 1)</span>
+                    @if (question.QuestionType == 2)
+                    {
+                        <span class="badge" style="background:var(--accent-light);color:var(--accent);font-size:.7rem;">Nhiều đáp án</span>
+                    }
+                </div>
 
-                    <div class="card-text fs-5 mb-3 markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
+                <div class="fs-5 mb-3 markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
 
-                    <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
-                    <input type="hidden" name="Questions[@i].QuestionType" value="@question.QuestionType" />
+                <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
+                <input type="hidden" name="Questions[@i].QuestionType" value="@question.QuestionType" />
 
-                    <div class="vstack gap-2">
-                        @for (int j = 0; j < question.Answers.Count; j++)
+                <div class="vstack gap-2">
+                    @for (int j = 0; j < question.Answers.Count; j++)
+                    {
+                        var answer = question.Answers[j];
+                        @if (question.QuestionType == 1)
                         {
-                            var answer = question.Answers[j];
-                            @if (question.QuestionType == 1)
-                            {
-                                <div class="form-check p-3 border rounded answer-option">
-                                    <input class="form-check-input" type="radio"
-                                           name="Questions[@i].SelectedAnswerId"
-                                           value="@answer.AnswerId"
-                                           id="q@(i)_a@(j)"
-                                           onchange="updateAnsweredCount()" />
-                                    <label class="form-check-label w-100" for="q@(i)_a@(j)">
-                                        @SafeMarkdown.ToInlineHtml(answer.Content)
-                                    </label>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="form-check p-3 border rounded answer-option">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="Questions[@i].SelectedAnswerIds"
-                                           value="@answer.AnswerId"
-                                           id="q@(i)_a@(j)"
-                                           onchange="updateAnsweredCount()" />
-                                    <label class="form-check-label w-100" for="q@(i)_a@(j)">
-                                        @SafeMarkdown.ToInlineHtml(answer.Content)
-                                    </label>
-                                </div>
-                            }
+                            <div class="answer-option">
+                                <input class="form-check-input" type="radio"
+                                       name="Questions[@i].SelectedAnswerId"
+                                       value="@answer.AnswerId"
+                                       id="q@(i)_a@(j)"
+                                       onchange="updateProgress()" />
+                                <label class="form-check-label w-100" for="q@(i)_a@(j)">
+                                    @SafeMarkdown.ToInlineHtml(answer.Content)
+                                </label>
+                            </div>
                         }
-                    </div>
+                        else
+                        {
+                            <div class="answer-option">
+                                <input class="form-check-input" type="checkbox"
+                                       name="Questions[@i].SelectedAnswerIds"
+                                       value="@answer.AnswerId"
+                                       id="q@(i)_a@(j)"
+                                       onchange="updateProgress()" />
+                                <label class="form-check-label w-100" for="q@(i)_a@(j)">
+                                    @SafeMarkdown.ToInlineHtml(answer.Content)
+                                </label>
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         }
     </div>
 
-    <div class="mt-4 mb-5 text-center">
+    <div class="sticky-action-bar">
         <button type="button" class="btn btn-primary btn-lg px-5" onclick="submitQuiz()">
             Nộp bài
         </button>
@@ -86,46 +89,33 @@
     <script>
         var totalQuestions = @Model.Questions.Count;
 
-        function updateAnsweredCount() {
+        function updateProgress() {
             var answered = 0;
             for (var i = 0; i < totalQuestions; i++) {
-                var questionCard = document.getElementById('question-' + i);
-                var radios = questionCard.querySelectorAll('input[type="radio"]:checked');
-                var checkboxes = questionCard.querySelectorAll('input[type="checkbox"]:checked');
-                if (radios.length > 0 || checkboxes.length > 0) {
+                var card = document.getElementById('question-' + i);
+                if (card.querySelectorAll('input:checked').length > 0) {
                     answered++;
-                    questionCard.classList.remove('border-warning');
-                    questionCard.classList.add('border-success');
+                    card.classList.add('border-success');
                 } else {
-                    questionCard.classList.remove('border-success');
+                    card.classList.remove('border-success');
                 }
             }
-            document.getElementById('answeredCount').textContent = answered + '/' + totalQuestions + ' đã trả lời';
+            document.getElementById('answeredBadge').textContent = answered + ' / ' + totalQuestions + ' đã trả lời';
+            document.getElementById('quizProgressBar').style.width = (answered / totalQuestions * 100) + '%';
         }
 
         function submitQuiz() {
             var answered = 0;
             for (var i = 0; i < totalQuestions; i++) {
-                var questionCard = document.getElementById('question-' + i);
-                var radios = questionCard.querySelectorAll('input[type="radio"]:checked');
-                var checkboxes = questionCard.querySelectorAll('input[type="checkbox"]:checked');
-                if (radios.length > 0 || checkboxes.length > 0) {
-                    answered++;
-                }
+                if (document.getElementById('question-' + i).querySelectorAll('input:checked').length > 0) answered++;
             }
-
-            if (answered < totalQuestions) {
-                var unanswered = totalQuestions - answered;
-                if (!confirm('Bạn còn ' + unanswered + ' câu chưa trả lời. Bạn có chắc muốn nộp bài?')) {
-                    return;
-                }
-            } else if (!confirm('Bạn có chắc muốn nộp bài?')) {
-                return;
-            }
-
-            document.getElementById('quizForm').submit();
+            var unanswered = totalQuestions - answered;
+            var msg = unanswered > 0
+                ? 'Bạn còn ' + unanswered + ' câu chưa trả lời. Bạn có chắc muốn nộp bài?'
+                : 'Bạn có chắc muốn nộp bài?';
+            if (confirm(msg)) document.getElementById('quizForm').submit();
         }
 
-        updateAnsweredCount();
+        updateProgress();
     </script>
 }

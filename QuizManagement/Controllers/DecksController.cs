@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "ManageContent")]
     public class DecksController : Controller
     {
         private readonly ISubjectService _subjectService;

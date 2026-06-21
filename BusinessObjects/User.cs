@@ -15,6 +15,12 @@ public partial class User
 
     public string? Role { get; set; }
 
+    public string? AvatarUrl { get; set; }
+
+    public bool IsDisabled { get; set; }
+
+    public string? SecurityStamp { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

@@ -24,37 +24,29 @@
     <a asp-controller="History" asp-action="Index" class="btn btn-outline-secondary">Lịch sử</a>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Số bài đã làm</h6>
-                <h2 class="card-title mb-0">@Model.TotalAttempts</h2>
-            </div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-card--purple">
+            <div class="stat-card__label">Số bài đã làm</div>
+            <div class="stat-card__value">@Model.TotalAttempts</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Điểm trung bình</h6>
-                <h2 class="card-title mb-0">@Model.AveragePercentage.ToString("0.#")%</h2>
-            </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-card--cyan">
+            <div class="stat-card__label">Điểm trung bình</div>
+            <div class="stat-card__value">@Model.AveragePercentage.ToString("0.#")%</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Tốt nhất</h6>
-                <h2 class="card-title text-success mb-0">@Model.BestPercentage.ToString("0.#")%</h2>
-            </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card stat-card--green">
+            <div class="stat-card__label">Tốt nhất</div>
+            <div class="stat-card__value">@Model.BestPercentage.ToString("0.#")%</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center h-100">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Tỷ lệ đạt</h6>
-                <h2 class="card-title mb-0">@Model.PassRate.ToString("0.#")%</h2>
-            </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card @(Model.PassRate >= 50 ? "stat-card--green" : "stat-card--red")">
+            <div class="stat-card__label">Tỷ lệ đạt</div>
+            <div class="stat-card__value">@Model.PassRate.ToString("0.#")%</div>
         </div>
     </div>
 </div>
