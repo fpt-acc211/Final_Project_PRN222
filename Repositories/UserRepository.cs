@@ -35,5 +35,12 @@ namespace Repositories
             _context.Users.Add(user);
             _context.SaveChanges();
         }
+
+        public void UpdateUser(User user)
+        {
+            user.UpdatedAt = DateTime.UtcNow;
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
     }
 }

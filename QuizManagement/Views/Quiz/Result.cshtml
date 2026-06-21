@@ -1,16 +1,15 @@
 @model QuizResultViewModel
 @{
     ViewData["Title"] = "Kết quả bài quiz";
+    var passed = Model.Percentage >= 50;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-5">
     <div>
         <h1 class="h3 mb-1">Kết quả bài quiz</h1>
-        <p class="text-muted mb-0">@Model.SubjectName / @Model.DeckName</p>
+        <p style="color:var(--text-muted);margin:0;">@Model.SubjectName / @Model.DeckName</p>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-controller="History" asp-action="Index" class="btn btn-outline-secondary">Lịch sử</a>
-    </div>
+    <a asp-controller="History" asp-action="Index" class="btn btn-outline-secondary">Lịch sử</a>
 </div>
 
 @if (TempData["SuccessMessage"] is string successMessage)
@@ -18,41 +17,23 @@
     <div class="alert alert-success">@successMessage</div>
 }
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Điểm số</h6>
-                <h2 class="card-title mb-0 @(Model.Percentage >= 50 ? "text-success" : "text-danger")">
-                    @Model.Score.ToString("0.##")/10
-                </h2>
-            </div>
-        </div>
+<div class="result-summary mb-5">
+    <div class="score-ring @(passed ? "pass" : "fail")">
+        <span class="sv">@Model.Percentage.ToString("0.#")%</span>
+        <span class="sl">@Model.Score.ToString("0.##")/10</span>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Tỷ lệ đúng</h6>
-                <h2 class="card-title mb-0 @(Model.Percentage >= 50 ? "text-success" : "text-danger")">
-                    @Model.Percentage.ToString("0.#")%
-                </h2>
-            </div>
+    <div class="result-meta">
+        <div class="stat-card stat-card--purple">
+            <div class="stat-card__label">Số câu đúng</div>
+            <div class="stat-card__value">@Model.CorrectCount/@Model.TotalCount</div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Số câu đúng</h6>
-                <h2 class="card-title mb-0">@Model.CorrectCount/@Model.TotalCount</h2>
-            </div>
+        <div class="stat-card @(passed ? "stat-card--green" : "stat-card--red")">
+            <div class="stat-card__label">Kết quả</div>
+            <div class="stat-card__value" style="font-size:1.3rem;">@(passed ? "Đạt" : "Không đạt")</div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-subtitle text-muted mb-2">Thời gian</h6>
-                <h6 class="card-title mb-0">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</h6>
-            </div>
+        <div class="stat-card stat-card--cyan">
+            <div class="stat-card__label">Thời gian</div>
+            <div class="stat-card__value" style="font-size:1rem;">@Model.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</div>
         </div>
     </div>
 </div>
@@ -63,61 +44,55 @@
     @for (int i = 0; i < Model.Questions.Count; i++)
     {
         var question = Model.Questions[i];
-        <div class="card @(question.IsCorrect ? "border-success" : "border-danger")">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <h5 class="card-title mb-0">
-                        <span class="badge @(question.IsCorrect ? "bg-success" : "bg-danger") me-2">
-                            Câu @(i + 1) - @(question.IsCorrect ? "Đúng" : "Sai")
-                        </span>
-                        @if (question.QuestionType == 2)
-                        {
-                            <span class="badge bg-info">Nhiều đáp án</span>
-                        }
-                    </h5>
-                </div>
+        <div class="result-card @(question.IsCorrect ? "result-card--correct" : "result-card--wrong")">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="badge @(question.IsCorrect ? "bg-success" : "bg-danger")">
+                    Câu @(i + 1) — @(question.IsCorrect ? "Đúng" : "Sai")
+                </span>
+                @if (question.QuestionType == 2)
+                {
+                    <span class="badge" style="background:var(--accent-light);color:var(--accent);font-size:.7rem;">Nhiều đáp án</span>
+                }
+            </div>
 
-                <div class="card-text fs-5 mb-3 markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
+            <div class="fs-5 mb-3 markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
 
-                <div class="vstack gap-2">
-                    @foreach (var answer in question.Answers)
-                    {
-                        var bgClass = "";
-                        if (answer.WasSelected && answer.IsCorrectAnswer)
-                        {
-                            bgClass = "bg-success bg-opacity-10 border-success";
-                        }
-                        else if (answer.WasSelected && !answer.IsCorrectAnswer)
-                        {
-                            bgClass = "bg-danger bg-opacity-10 border-danger";
-                        }
-                        else if (!answer.WasSelected && answer.IsCorrectAnswer)
-                        {
-                            bgClass = "bg-warning bg-opacity-10 border-warning";
-                        }
+            <div class="vstack gap-2">
+                @foreach (var answer in question.Answers)
+                {
+                    string ansClass;
+                    if (answer.WasSelected && answer.IsCorrectAnswer)
+                        ansClass = "result-answer correct-selected";
+                    else if (answer.WasSelected && !answer.IsCorrectAnswer)
+                        ansClass = "result-answer wrong-selected";
+                    else if (!answer.WasSelected && answer.IsCorrectAnswer)
+                        ansClass = "result-answer correct-missed";
+                    else
+                        ansClass = "result-answer";
 
-                        <div class="p-3 border rounded @bgClass">
-                            <span>@SafeMarkdown.ToInlineHtml(answer.Content)</span>
+                    <div class="@ansClass">
+                        <span>@SafeMarkdown.ToInlineHtml(answer.Content)</span>
+                        <div class="d-inline-flex gap-1 ms-2">
                             @if (answer.IsCorrectAnswer)
                             {
-                                <span class="badge bg-success ms-2">Đáp án đúng</span>
+                                <span class="badge bg-success">Đáp án đúng</span>
                             }
                             @if (answer.WasSelected)
                             {
-                                <span class="badge bg-primary ms-1">Đã chọn</span>
+                                <span class="badge bg-primary">Đã chọn</span>
                             }
                         </div>
-                    }
-                </div>
-
-                @if (!string.IsNullOrWhiteSpace(question.Explanation))
-                {
-                    <div class="alert alert-info mt-3 mb-0 markdown-content">
-                        <strong>Giải thích:</strong>
-                        @SafeMarkdown.ToHtml(question.Explanation)
                     </div>
                 }
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(question.Explanation))
+            {
+                <div class="alert alert-info mt-3 mb-0 markdown-content">
+                    <strong>Giải thích:</strong>
+                    @SafeMarkdown.ToHtml(question.Explanation)
+                </div>
+            }
         </div>
     }
 </div>

@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "ViewAnalytics")]
     public class StatisticsController : Controller
     {
         private readonly IQuizService _quizService;
