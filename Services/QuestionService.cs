@@ -12,9 +12,13 @@ namespace Services
             _repository = repository;
         }
 
+        public IEnumerable<Question> GetQuestionsByDeckForStudy(int deckId)
+            => _repository.GetQuestionsByDeckForStudy(deckId);
+
         public IEnumerable<Question> GetQuestionsByDeck(int deckId, string userId) => _repository.GetQuestionsByDeck(deckId, userId);
 
-        public Question? GetQuestionById(int id, string userId) => _repository.GetQuestionById(id, userId);
+        public Question? GetQuestionById(int id, string userId, bool allowAll = false)
+            => _repository.GetQuestionById(id, userId, allowAll);
 
         public void AddQuestion(Question question) => _repository.AddQuestion(question);
 

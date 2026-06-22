@@ -5,8 +5,10 @@ namespace Repositories
 {
     public interface ISubjectRepository
     {
+        IEnumerable<Subject> GetAllSubjects();
         IEnumerable<Subject> GetSubjectsByUserId(string userId);
-        Subject? GetSubjectById(int id, string userId);
+        Subject? GetSubjectForStudy(int id);
+        Subject? GetSubjectById(int id, string userId, bool allowAll = false);
         bool NameExists(string userId, string name, int? excludedId = null);
         void AddSubject(Subject subject);
         void UpdateSubject(Subject subject);

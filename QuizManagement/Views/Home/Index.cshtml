@@ -1,6 +1,7 @@
 @model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var canManageContent = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Mentor);
 }
 
 <div class="mb-5" style="animation: pageFadeIn .4s ease both;">
@@ -109,14 +110,18 @@
     <div class="col-lg-5">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="fw-semibold">Môn học của bạn</span>
-                <a asp-controller="Subjects" asp-action="Index" class="btn btn-sm btn-outline-secondary">Quản lý</a>
+                <span class="fw-semibold">Học liệu</span>
+                <a asp-controller="Subjects" asp-action="Index" class="btn btn-sm btn-outline-secondary">Khám phá</a>
             </div>
             <div class="card-body p-0">
                 @if (!Model.Subjects.Any())
                 {
                     <div class="p-4" style="color:var(--text-muted);">
-                        Chưa có môn học nào. <a asp-controller="Subjects" asp-action="Create" style="color:var(--accent);">Tạo mới</a>.
+                        Chưa có môn học nào.
+                        @if (canManageContent)
+                        {
+                            <a asp-controller="Subjects" asp-action="Create" style="color:var(--accent);">Tạo mới</a><text>.</text>
+                        }
                     </div>
                 }
                 else

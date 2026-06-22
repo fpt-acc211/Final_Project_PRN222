@@ -17,8 +17,10 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 // 1. DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection chưa được cấu hình.");
 builder.Services.AddDbContext<QuizManagementDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // 2. Repositories
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
@@ -53,13 +55,17 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ManageUsers", policy =>
         policy.RequireRole(AppRoles.Admin));
 
-    // ManageContent: Admin + Mentor
+    // Admin quản lý toàn bộ học liệu; Mentor chỉ quản lý học liệu thuộc sở hữu của mình.
     options.AddPolicy("ManageContent", policy =>
         policy.RequireRole(AppRoles.Admin, AppRoles.Mentor));
 
-    // ViewAnalytics: Admin + Mentor
+    // Cả ba vai trò đều có thể duyệt học liệu, học flashcard và làm quiz.
+    options.AddPolicy("StudyContent", policy =>
+        policy.RequireRole(AppRoles.Admin, AppRoles.Mentor, AppRoles.User));
+
+    // Thống kê được lọc theo user hiện tại tại controller/service.
     options.AddPolicy("ViewAnalytics", policy =>
-        policy.RequireRole(AppRoles.Admin, AppRoles.Mentor));
+        policy.RequireAuthenticatedUser());
 
     // TakeQuiz: tất cả người dùng đã đăng nhập
     options.AddPolicy("TakeQuiz", policy =>
@@ -111,51 +117,59 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// ==================== KIỂM TRA KẾT NỐI DATABASE + SEED ====================
-using (var scope = app.Services.CreateScope())
+// Chỉ seed Admin khi được bật rõ ràng trong appsettings.Local.json/environment.
+if (builder.Configuration.GetValue<bool>("AdminSeed:Enabled"))
 {
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var username = builder.Configuration["AdminSeed:Username"]?.Trim();
+    var email = builder.Configuration["AdminSeed:Email"]?.Trim();
+    var password = builder.Configuration["AdminSeed:Password"];
+
+    if (string.IsNullOrWhiteSpace(username) ||
+        string.IsNullOrWhiteSpace(email) ||
+        string.IsNullOrWhiteSpace(password) ||
+        password.Length < 12 ||
+        password == "replace-with-a-strong-password")
+    {
+        throw new InvalidOperationException(
+            "AdminSeed được bật nhưng Username, Email hoặc Password (tối thiểu 12 ký tự) chưa hợp lệ.");
+    }
+
     try
     {
-        var context = services.GetRequiredService<QuizManagementDbContext>();
-        logger.LogInformation("Đang kiểm tra kết nối tới Database...");
-
-        if (context.Database.CanConnect())
+        var context = scope.ServiceProvider.GetRequiredService<QuizManagementDbContext>();
+        if (!context.Users.Any(u => u.Role == AppRoles.Admin))
         {
-            logger.LogInformation("Kết nối Database thành công!");
-
-            // Seed admin account if none exists
-            if (!context.Users.Any(u => u.Role == AppRoles.Admin))
+            if (context.Users.Any(u => u.Email == email || u.Username == username))
             {
-                var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<BusinessObjects.User>();
-                var adminUser = new BusinessObjects.User
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Username = "Admin",
-                    Email = "admin@test.com",
-                    Role = AppRoles.Admin,
-                    IsDisabled = false,
-                    SecurityStamp = Guid.NewGuid().ToString(),
-                    CreatedAt = DateTime.UtcNow
-                };
-                adminUser.PasswordHash = hasher.HashPassword(adminUser, "Admin@123");
-                context.Users.Add(adminUser);
-                context.SaveChanges();
-                logger.LogInformation("Đã tạo tài khoản Admin: admin@test.com / Admin@123");
+                throw new InvalidOperationException(
+                    "Không thể seed Admin vì Username hoặc Email đã được sử dụng.");
             }
-        }
-        else
-        {
-            logger.LogError("Không thể kết nối tới Database. Kiểm tra lại Connection String hoặc SQL Server.");
+
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<User>();
+            var adminUser = new User
+            {
+                Id = Guid.NewGuid().ToString(),
+                Username = username,
+                Email = email,
+                Role = AppRoles.Admin,
+                IsDisabled = false,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                CreatedAt = DateTime.UtcNow
+            };
+            adminUser.PasswordHash = hasher.HashPassword(adminUser, password);
+            context.Users.Add(adminUser);
+            context.SaveChanges();
+            logger.LogInformation("Đã tạo tài khoản Admin cấu hình cho {AdminEmail}.", email);
         }
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Đã xảy ra lỗi khi kết nối Database!");
+        logger.LogError(ex, "Không thể seed tài khoản Admin.");
+        throw;
     }
 }
-// ========================================================================
 
 if (!app.Environment.IsDevelopment())
 {
@@ -164,12 +178,11 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseStaticFiles();
 
 app.MapControllerRoute(
     name: "default",

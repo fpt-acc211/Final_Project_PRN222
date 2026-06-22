@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "StudyContent")]
     public class FlashcardsController : Controller
     {
         private readonly IDeckService _deckService;
@@ -20,13 +20,13 @@ namespace QuizManagement.Controllers
 
         public IActionResult Study(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckForStudy(deckId);
             if (deck is null)
             {
                 return NotFound();
             }
 
-            var questions = _questionService.GetQuestionsByDeck(deckId, CurrentUserId()).ToList();
+            var questions = _questionService.GetQuestionsByDeckForStudy(deckId).ToList();
             var model = new FlashcardStudyViewModel
             {
                 DeckId = deck.Id,

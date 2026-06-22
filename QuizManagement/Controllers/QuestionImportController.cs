@@ -26,7 +26,7 @@ namespace QuizManagement.Controllers
 
         public IActionResult Import(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(deckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -39,7 +39,7 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Preview(QuestionImportInputViewModel model)
         {
-            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -86,7 +86,7 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Commit(QuestionImportPreviewViewModel model)
         {
-            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -183,5 +183,7 @@ namespace QuizManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
         }
+
+        private bool IsAdmin() => User.IsInRole(AppRoles.Admin);
     }
 }

@@ -95,6 +95,21 @@ namespace QuizManagement.Controllers
             var user = _adminService.GetUserById(model.UserId);
             if (user is null) return NotFound();
 
+            if (user.Id == CurrentUserId() && model.NewRole != AppRoles.Admin)
+            {
+                TempData["ErrorMessage"] = "Bạn không thể tự hạ vai trò Admin của mình.";
+                return RedirectToAction(nameof(UserDetail), new { id = model.UserId });
+            }
+
+            if (user.Role == AppRoles.Admin &&
+                model.NewRole != AppRoles.Admin &&
+                !user.IsDisabled &&
+                _adminService.CountActiveAdmins() <= 1)
+            {
+                TempData["ErrorMessage"] = "Hệ thống phải luôn có ít nhất một Admin đang hoạt động.";
+                return RedirectToAction(nameof(UserDetail), new { id = model.UserId });
+            }
+
             _adminService.ChangeRole(user, model.NewRole);
 
             TempData["SuccessMessage"] = $"Đã đổi vai trò của {user.Username} thành {model.NewRole}.";
@@ -115,6 +130,14 @@ namespace QuizManagement.Controllers
 
             var user = _adminService.GetUserById(id);
             if (user is null) return NotFound();
+
+            if (!user.IsDisabled &&
+                user.Role == AppRoles.Admin &&
+                _adminService.CountActiveAdmins() <= 1)
+            {
+                TempData["ErrorMessage"] = "Không thể vô hiệu hóa Admin đang hoạt động cuối cùng.";
+                return RedirectToAction(nameof(UserDetail), new { id });
+            }
 
             _adminService.SetDisabled(user, !user.IsDisabled);
 

@@ -27,22 +27,22 @@ namespace DataAccessObjects
             }
         }
 
-        public List<Question> GetQuestionsForQuiz(QuizManagementDbContext context, int deckId, string userId)
+        public List<Question> GetQuestionsForQuiz(QuizManagementDbContext context, int deckId)
         {
             return context.Questions
                 .Include(q => q.Answers)
                 .Include(q => q.Deck)
                     .ThenInclude(d => d.Subject)
-                .Where(q => q.DeckId == deckId && q.Deck.Subject.UserId == userId)
+                .Where(q => q.DeckId == deckId)
                 .ToList();
         }
 
-        public int GetQuestionCount(QuizManagementDbContext context, int deckId, string userId)
+        public int GetQuestionCount(QuizManagementDbContext context, int deckId)
         {
             return context.Questions
                 .Include(q => q.Deck)
                     .ThenInclude(d => d.Subject)
-                .Count(q => q.DeckId == deckId && q.Deck.Subject.UserId == userId);
+                .Count(q => q.DeckId == deckId);
         }
 
         public TestHistory SaveTestResult(QuizManagementDbContext context, TestHistory history)

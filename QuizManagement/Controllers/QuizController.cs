@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = "StudyContent")]
     public class QuizController : Controller
     {
         private readonly IDeckService _deckService;
@@ -24,13 +24,13 @@ namespace QuizManagement.Controllers
         /// </summary>
         public IActionResult Config(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckForStudy(deckId);
             if (deck is null)
             {
                 return NotFound();
             }
 
-            var availableCount = _quizService.GetAvailableQuestionCount(deckId, CurrentUserId());
+            var availableCount = _quizService.GetAvailableQuestionCount(deckId);
             if (availableCount == 0)
             {
                 TempData["ErrorMessage"] = "Bộ đề này chưa có câu hỏi nào để làm bài.";
@@ -54,13 +54,13 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Take(QuizConfigViewModel config)
         {
-            var deck = _deckService.GetDeckById(config.DeckId, CurrentUserId());
+            var deck = _deckService.GetDeckForStudy(config.DeckId);
             if (deck is null)
             {
                 return NotFound();
             }
 
-            var availableCount = _quizService.GetAvailableQuestionCount(config.DeckId, CurrentUserId());
+            var availableCount = _quizService.GetAvailableQuestionCount(config.DeckId);
             config.AvailableQuestionCount = availableCount;
             config.DeckName = deck.Name;
             config.SubjectName = deck.Subject.Name;
@@ -79,7 +79,7 @@ namespace QuizManagement.Controllers
 
             // Lấy câu hỏi đã shuffle (Fisher-Yates)
             var questions = _quizService.GetQuestionsForQuiz(
-                config.DeckId, config.QuestionCount, CurrentUserId());
+                config.DeckId, config.QuestionCount);
 
             // Map sang ViewModel - KHÔNG gửi IsCorrect ra client
             var model = new QuizTakeViewModel
@@ -110,7 +110,7 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Submit(QuizSubmitViewModel model)
         {
-            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId());
+            var deck = _deckService.GetDeckForStudy(model.DeckId);
             if (deck is null)
             {
                 return NotFound();

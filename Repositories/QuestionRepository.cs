@@ -16,8 +16,11 @@ namespace Repositories
         public IEnumerable<Question> GetQuestionsByDeck(int deckId, string userId)
             => QuestionDAO.Instance.GetQuestionsByDeck(_context, deckId, userId);
 
-        public Question? GetQuestionById(int id, string userId)
-            => QuestionDAO.Instance.GetQuestionById(_context, id, userId);
+        public IEnumerable<Question> GetQuestionsByDeckForStudy(int deckId)
+            => QuestionDAO.Instance.GetQuestionsByDeckForStudy(_context, deckId);
+
+        public Question? GetQuestionById(int id, string userId, bool allowAll = false)
+            => QuestionDAO.Instance.GetQuestionById(_context, id, userId, allowAll);
 
         public void AddQuestion(Question question)
             => QuestionDAO.Instance.AddQuestion(_context, question);

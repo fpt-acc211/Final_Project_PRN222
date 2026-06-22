@@ -30,7 +30,7 @@ namespace QuizManagement.Controllers
 
             var (totalQuizzes, averagePercentage, lastQuizDate) = _quizService.GetQuizStatistics(userId);
             var recentHistories = _quizService.GetRecentTestHistories(userId, 5);
-            var subjects = _subjectService.GetSubjectsByUserId(userId).ToList();
+            var subjects = _subjectService.GetAllSubjects().ToList();
 
             var model = new DashboardViewModel
             {
