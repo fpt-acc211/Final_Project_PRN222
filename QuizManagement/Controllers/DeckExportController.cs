@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BusinessObjects;
 using Services;
 using System.Security.Claims;
 
@@ -24,13 +25,13 @@ namespace QuizManagement.Controllers
 
         public IActionResult Word(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(deckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
             }
 
-            var questions = _questionService.GetQuestionsByDeck(deckId, CurrentUserId()).ToList();
+            var questions = _questionService.GetQuestionsByDeckForStudy(deckId).ToList();
             var bytes = _deckExportService.ExportDeckToWord(deck, questions);
             return File(
                 bytes,
@@ -40,13 +41,13 @@ namespace QuizManagement.Controllers
 
         public IActionResult Pdf(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(deckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
             }
 
-            var questions = _questionService.GetQuestionsByDeck(deckId, CurrentUserId()).ToList();
+            var questions = _questionService.GetQuestionsByDeckForStudy(deckId).ToList();
             var bytes = _deckExportService.ExportDeckToPdf(deck, questions);
             return File(bytes, "application/pdf", _deckExportService.BuildSafeFileName(deck.Name, "pdf"));
         }
@@ -56,5 +57,7 @@ namespace QuizManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
         }
+
+        private bool IsAdmin() => User.IsInRole(AppRoles.Admin);
     }
 }

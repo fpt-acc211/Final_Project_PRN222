@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize(Policy = "ManageContent")]
+    [Authorize(Policy = "StudyContent")]
     public class QuestionsController : Controller
     {
         private readonly IDeckService _deckService;
@@ -21,20 +21,22 @@ namespace QuizManagement.Controllers
 
         public IActionResult Index(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckForStudy(deckId);
             if (deck is null)
             {
                 return NotFound();
             }
 
             ViewBag.Deck = deck;
-            var questions = _questionService.GetQuestionsByDeck(deckId, CurrentUserId());
+            ViewBag.CurrentUserId = CurrentUserId();
+            var questions = _questionService.GetQuestionsByDeckForStudy(deckId);
             return View(questions);
         }
 
+        [Authorize(Policy = "ManageContent")]
         public IActionResult Create(int deckId)
         {
-            var deck = _deckService.GetDeckById(deckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(deckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -44,10 +46,11 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(QuestionFormViewModel model)
         {
-            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId());
+            var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -67,9 +70,10 @@ namespace QuizManagement.Controllers
             return RedirectToAction(nameof(Index), new { deckId = model.DeckId });
         }
 
+        [Authorize(Policy = "ManageContent")]
         public IActionResult Edit(int id)
         {
-            var question = _questionService.GetQuestionById(id, CurrentUserId());
+            var question = _questionService.GetQuestionById(id, CurrentUserId(), IsAdmin());
             if (question is null)
             {
                 return NotFound();
@@ -79,6 +83,7 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, QuestionFormViewModel model)
         {
@@ -87,7 +92,7 @@ namespace QuizManagement.Controllers
                 return BadRequest();
             }
 
-            var question = _questionService.GetQuestionById(id, CurrentUserId());
+            var question = _questionService.GetQuestionById(id, CurrentUserId(), IsAdmin());
             if (question is null)
             {
                 return NotFound();
@@ -111,10 +116,11 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
-            var question = _questionService.GetQuestionById(id, CurrentUserId());
+            var question = _questionService.GetQuestionById(id, CurrentUserId(), IsAdmin());
             if (question is null)
             {
                 return NotFound();
@@ -193,7 +199,7 @@ namespace QuizManagement.Controllers
                     .Select(a => new Answer
                     {
                         Id = a.Id,
-                        Content = a.Content.Trim(),
+                        Content = a.Content!.Trim(),
                         IsCorrect = a.IsCorrect
                     })
                     .ToList()
@@ -208,7 +214,7 @@ namespace QuizManagement.Controllers
                 .Where(a => !string.IsNullOrWhiteSpace(a.Content))
                 .Select(a =>
                 {
-                    a.Content = a.Content.Trim();
+                    a.Content = a.Content!.Trim();
                     return a;
                 })
                 .ToList();
@@ -247,5 +253,7 @@ namespace QuizManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
         }
+
+        private bool IsAdmin() => User.IsInRole(AppRoles.Admin);
     }
 }

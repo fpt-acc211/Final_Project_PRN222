@@ -38,13 +38,26 @@ namespace DataAccessObjects
                 .ToList();
         }
 
-        public Question? GetQuestionById(QuizManagementDbContext context, int id, string userId)
+        public IEnumerable<Question> GetQuestionsByDeckForStudy(
+            QuizManagementDbContext context, int deckId)
         {
             return context.Questions
                 .Include(q => q.Answers)
                 .Include(q => q.Deck)
                 .ThenInclude(d => d.Subject)
-                .FirstOrDefault(q => q.Id == id && q.Deck.Subject.UserId == userId);
+                .Where(q => q.DeckId == deckId)
+                .OrderByDescending(q => q.CreatedAt)
+                .ToList();
+        }
+
+        public Question? GetQuestionById(
+            QuizManagementDbContext context, int id, string userId, bool allowAll = false)
+        {
+            return context.Questions
+                .Include(q => q.Answers)
+                .Include(q => q.Deck)
+                .ThenInclude(d => d.Subject)
+                .FirstOrDefault(q => q.Id == id && (allowAll || q.Deck.Subject.UserId == userId));
         }
 
         public void AddQuestion(QuizManagementDbContext context, Question question)

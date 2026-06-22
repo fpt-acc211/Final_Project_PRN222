@@ -13,9 +13,9 @@ namespace Services
             _repository = repository;
         }
 
-        public List<Question> GetQuestionsForQuiz(int deckId, int questionCount, string userId)
+        public List<Question> GetQuestionsForQuiz(int deckId, int questionCount)
         {
-            var allQuestions = _repository.GetQuestionsForQuiz(deckId, userId);
+            var allQuestions = _repository.GetQuestionsForQuiz(deckId);
 
             // Fisher-Yates shuffle cho câu hỏi
             Shuffle(allQuestions);
@@ -34,15 +34,15 @@ namespace Services
             return selected;
         }
 
-        public int GetAvailableQuestionCount(int deckId, string userId)
-            => _repository.GetQuestionCount(deckId, userId);
+        public int GetAvailableQuestionCount(int deckId)
+            => _repository.GetQuestionCount(deckId);
 
         public TestHistory GradeAndSaveQuiz(
             int deckId, string userId,
             List<(int QuestionId, int QuestionType, List<int> SelectedAnswerIds)> submittedAnswers)
         {
             // Lấy tất cả câu hỏi + đáp án đúng từ DB
-            var allQuestions = _repository.GetQuestionsForQuiz(deckId, userId);
+            var allQuestions = _repository.GetQuestionsForQuiz(deckId);
             var questionDict = allQuestions.ToDictionary(q => q.Id);
 
             var details = new List<TestResultDetail>();

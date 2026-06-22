@@ -16,8 +16,14 @@ namespace Repositories
         public IEnumerable<Deck> GetDecksBySubject(int subjectId, string userId)
             => DeckDAO.Instance.GetDecksBySubject(_context, subjectId, userId);
 
-        public Deck? GetDeckById(int id, string userId)
-            => DeckDAO.Instance.GetDeckById(_context, id, userId);
+        public IEnumerable<Deck> GetDecksBySubjectForStudy(int subjectId)
+            => DeckDAO.Instance.GetDecksBySubjectForStudy(_context, subjectId);
+
+        public Deck? GetDeckForStudy(int id)
+            => DeckDAO.Instance.GetDeckForStudy(_context, id);
+
+        public Deck? GetDeckById(int id, string userId, bool allowAll = false)
+            => DeckDAO.Instance.GetDeckById(_context, id, userId, allowAll);
 
         public bool NameExists(int subjectId, string name, int? excludedId = null)
             => DeckDAO.Instance.NameExists(_context, subjectId, name, excludedId);

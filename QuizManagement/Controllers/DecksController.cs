@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
-    [Authorize(Policy = "ManageContent")]
+    [Authorize(Policy = "StudyContent")]
     public class DecksController : Controller
     {
         private readonly ISubjectService _subjectService;
@@ -21,20 +21,22 @@ namespace QuizManagement.Controllers
 
         public IActionResult Index(int subjectId)
         {
-            var subject = _subjectService.GetSubjectById(subjectId, CurrentUserId());
+            var subject = _subjectService.GetSubjectForStudy(subjectId);
             if (subject is null)
             {
                 return NotFound();
             }
 
             ViewBag.Subject = subject;
-            var decks = _deckService.GetDecksBySubject(subjectId, CurrentUserId());
+            ViewBag.CurrentUserId = CurrentUserId();
+            var decks = _deckService.GetDecksBySubjectForStudy(subjectId);
             return View(decks);
         }
 
+        [Authorize(Policy = "ManageContent")]
         public IActionResult Create(int subjectId)
         {
-            var subject = _subjectService.GetSubjectById(subjectId, CurrentUserId());
+            var subject = _subjectService.GetSubjectById(subjectId, CurrentUserId(), IsAdmin());
             if (subject is null)
             {
                 return NotFound();
@@ -48,12 +50,13 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(DeckFormViewModel model)
         {
             model.Name = model.Name.Trim();
 
-            var subject = _subjectService.GetSubjectById(model.SubjectId, CurrentUserId());
+            var subject = _subjectService.GetSubjectById(model.SubjectId, CurrentUserId(), IsAdmin());
             if (subject is null)
             {
                 return NotFound();
@@ -81,9 +84,10 @@ namespace QuizManagement.Controllers
             return RedirectToAction(nameof(Index), new { subjectId = model.SubjectId });
         }
 
+        [Authorize(Policy = "ManageContent")]
         public IActionResult Edit(int id)
         {
-            var deck = _deckService.GetDeckById(id, CurrentUserId());
+            var deck = _deckService.GetDeckById(id, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -99,6 +103,7 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, DeckFormViewModel model)
         {
@@ -109,7 +114,7 @@ namespace QuizManagement.Controllers
 
             model.Name = model.Name.Trim();
 
-            var deck = _deckService.GetDeckById(id, CurrentUserId());
+            var deck = _deckService.GetDeckById(id, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -137,10 +142,11 @@ namespace QuizManagement.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "ManageContent")]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
-            var deck = _deckService.GetDeckById(id, CurrentUserId());
+            var deck = _deckService.GetDeckById(id, CurrentUserId(), IsAdmin());
             if (deck is null)
             {
                 return NotFound();
@@ -159,5 +165,7 @@ namespace QuizManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
         }
+
+        private bool IsAdmin() => User.IsInRole(AppRoles.Admin);
     }
 }

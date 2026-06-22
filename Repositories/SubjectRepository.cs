@@ -18,8 +18,14 @@ namespace Repositories
         public IEnumerable<Subject> GetSubjectsByUserId(string userId)
             => SubjectDAO.Instance.GetSubjectsByUserId(_context, userId);
 
-        public Subject? GetSubjectById(int id, string userId)
-            => SubjectDAO.Instance.GetSubjectById(_context, id, userId);
+        public IEnumerable<Subject> GetAllSubjects()
+            => SubjectDAO.Instance.GetAllSubjects(_context);
+
+        public Subject? GetSubjectForStudy(int id)
+            => SubjectDAO.Instance.GetSubjectForStudy(_context, id);
+
+        public Subject? GetSubjectById(int id, string userId, bool allowAll = false)
+            => SubjectDAO.Instance.GetSubjectById(_context, id, userId, allowAll);
 
         public bool NameExists(string userId, string name, int? excludedId = null)
             => SubjectDAO.Instance.NameExists(_context, userId, name, excludedId);

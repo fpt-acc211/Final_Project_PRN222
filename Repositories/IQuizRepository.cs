@@ -4,8 +4,8 @@ namespace Repositories
 {
     public interface IQuizRepository
     {
-        List<Question> GetQuestionsForQuiz(int deckId, string userId);
-        int GetQuestionCount(int deckId, string userId);
+        List<Question> GetQuestionsForQuiz(int deckId);
+        int GetQuestionCount(int deckId);
         TestHistory SaveTestResult(TestHistory history);
         TestHistory? GetTestHistoryById(int id, string userId);
         List<TestHistory> GetTestHistoriesByUser(string userId);

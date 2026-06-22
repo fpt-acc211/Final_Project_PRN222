@@ -14,8 +14,11 @@ namespace Services
             _repository = repository;
         }
 
+        public IEnumerable<Subject> GetAllSubjects() => _repository.GetAllSubjects();
         public IEnumerable<Subject> GetSubjectsByUserId(string userId) => _repository.GetSubjectsByUserId(userId);
-        public Subject? GetSubjectById(int id, string userId) => _repository.GetSubjectById(id, userId);
+        public Subject? GetSubjectForStudy(int id) => _repository.GetSubjectForStudy(id);
+        public Subject? GetSubjectById(int id, string userId, bool allowAll = false)
+            => _repository.GetSubjectById(id, userId, allowAll);
         public bool NameExists(string userId, string name, int? excludedId = null) => _repository.NameExists(userId, name, excludedId);
         public void AddSubject(Subject subject) => _repository.AddSubject(subject);
 

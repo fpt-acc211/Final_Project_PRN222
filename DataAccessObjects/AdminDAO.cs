@@ -70,6 +70,11 @@ namespace DataAccessObjects
             );
         }
 
+        public int CountActiveAdmins(QuizManagementDbContext context)
+        {
+            return context.Users.Count(u => u.Role == AppRoles.Admin && !u.IsDisabled);
+        }
+
         public void UpdateUser(QuizManagementDbContext context, User user)
         {
             user.UpdatedAt = DateTime.UtcNow;

@@ -36,11 +36,29 @@ namespace DataAccessObjects
                 .ToList();
         }
 
-        public Deck? GetDeckById(QuizManagementDbContext context, int id, string userId)
+        public IEnumerable<Deck> GetDecksBySubjectForStudy(
+            QuizManagementDbContext context, int subjectId)
         {
             return context.Decks
                 .Include(d => d.Subject)
-                .FirstOrDefault(d => d.Id == id && d.Subject.UserId == userId);
+                .Where(d => d.SubjectId == subjectId)
+                .OrderBy(d => d.Name)
+                .ToList();
+        }
+
+        public Deck? GetDeckForStudy(QuizManagementDbContext context, int id)
+        {
+            return context.Decks
+                .Include(d => d.Subject)
+                .FirstOrDefault(d => d.Id == id);
+        }
+
+        public Deck? GetDeckById(
+            QuizManagementDbContext context, int id, string userId, bool allowAll = false)
+        {
+            return context.Decks
+                .Include(d => d.Subject)
+                .FirstOrDefault(d => d.Id == id && (allowAll || d.Subject.UserId == userId));
         }
 
         public bool NameExists(QuizManagementDbContext context, int subjectId, string name, int? excludedId = null)

@@ -4,8 +4,8 @@ namespace Services
 {
     public interface IQuizService
     {
-        List<Question> GetQuestionsForQuiz(int deckId, int questionCount, string userId);
-        int GetAvailableQuestionCount(int deckId, string userId);
+        List<Question> GetQuestionsForQuiz(int deckId, int questionCount);
+        int GetAvailableQuestionCount(int deckId);
         TestHistory GradeAndSaveQuiz(int deckId, string userId, List<(int QuestionId, int QuestionType, List<int> SelectedAnswerIds)> submittedAnswers);
         TestHistory? GetTestHistoryById(int id, string userId);
         List<TestHistory> GetTestHistoriesByUser(string userId);

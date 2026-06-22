@@ -31,15 +31,12 @@
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Mentor))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Subjects" asp-action="Index">Môn học</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Statistics" asp-action="Index">Thống kê</a>
-                                </li>
-                            }
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Subjects" asp-action="Index">Môn học</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Statistics" asp-action="Index">Thống kê</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="History" asp-action="Index">Lịch sử</a>
                             </li>

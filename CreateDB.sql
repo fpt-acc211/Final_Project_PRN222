@@ -10,6 +10,10 @@ CREATE TABLE Users (
     Email NVARCHAR(256) NOT NULL,
     PasswordHash NVARCHAR(MAX),
     Role NVARCHAR(50),
+    -- Role/Profile/Security fields (merged from Phase 2)
+    AvatarUrl NVARCHAR(500) NULL,
+    IsDisabled BIT NOT NULL DEFAULT 0,
+    SecurityStamp NVARCHAR(450) NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL
 );

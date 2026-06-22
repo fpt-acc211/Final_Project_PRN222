@@ -1,6 +1,6 @@
 ﻿# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-21
+Cập nhật gần nhất: 2026-06-22
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -30,7 +30,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Git/local hygiene | `[x]` | `.gitignore` bỏ qua `Error.md`, `PRN222.md`, `bin/`, `obj/`, `.vs/`; `TASK_PROGRESS.md` được commit để team theo dõi |
 | Quiz engine | `[x]` | Đã có tạo bài, shuffle Fisher-Yates, chấm điểm single/multiple choice, lưu lịch sử |
 | UI final | `[x]` | Dark Theme + Glassmorphism hoàn tất; readability cải thiện đạt WCAG AA |
-| Admin panel | `[x]` | Admin/Index, Admin/Users, phân quyền Policy `AdminOnly` |
+| Admin panel | `[x]` | Admin/Index, Admin/Users, phân quyền Policy `ManageUsers` |
 
 ## 3. Thứ Tự Ưu Tiên MVP
 
@@ -79,7 +79,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Cấu hình Cookie Authentication trong `Program.cs` | `[x]` | BE | `UseAuthentication()` đặt trước `UseAuthorization()` |
 | Gán claim UserId/Role khi login | `[x]` | BE | Cookie có UserId, Username, Email, Role |
 | Thêm `[Authorize]` cho màn hình cần đăng nhập | `[x]` | BE | `HomeController` yêu cầu đăng nhập, Account Login/Register cho phép anonymous |
-| Phân quyền User/Admin cơ bản | `[x]` | BE | Đã enforce Policy `AdminOnly`; Admin panel `/Admin/Index`, `/Admin/Users` yêu cầu Role = Admin |
+| Phân quyền Admin/Mentor/User | `[x]` | BE | Admin toàn quyền; Mentor CRUD học liệu sở hữu; User chỉ xem/học/quiz; `StudyContent` tách khỏi `ManageContent` |
 
 ## 7. Phase 3 - CRUD Nội Dung Học Tập
 
@@ -101,7 +101,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Tạo repository/service cho Deck | `[x]` | BE | CRUD theo `SubjectId` và user hiện tại |
 | Tạo `DecksController` | `[x]` | BE | List/Create/Edit/Delete hoạt động |
 | Tạo views Deck | `[x]` | FE | Xem được các bộ đề trong một Subject |
-| Chặn truy cập Deck không thuộc user | `[x]` | BE | User không xem/sửa/xóa dữ liệu của người khác |
+| Ownership và quyền học Deck | `[x]` | BE | Mọi role được học Deck đang hoạt động; Mentor chỉ sửa/xóa Deck sở hữu; Admin được quản lý tất cả |
 
 ### Question Và Answer
 
@@ -175,11 +175,11 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| Tạo `AdminController` | `[x]` | BE | Yêu cầu Policy `AdminOnly`; action Index + Users |
+| Tạo `AdminController` | `[x]` | BE | Yêu cầu Policy `ManageUsers`; action Index + Users/UserDetail/ChangeRole/ToggleDisabled |
 | Dashboard Admin | `[x]` | BE/FE | Hiện tổng user, môn học, bộ đề, câu hỏi, lần làm bài |
 | Quản lý người dùng | `[x]` | BE/FE | Xem danh sách user; admin có thể thay đổi Role |
-| Khóa / mở khóa tài khoản | `[x]` | BE | Đã có `IsLocked` và `SecurityStamp`-based session invalidation |
-| Tạo tài khoản Admin đầu tiên | `[!]` | BE | Cần seed hoặc tạo thủ công; chưa có UI self-signup cho Admin |
+| Khóa / mở khóa tài khoản | `[x]` | BE | Đã có `IsDisabled`, bảo vệ Admin cuối cùng và `SecurityStamp`-based session invalidation |
+| Tạo tài khoản Admin đầu tiên | `[x]` | BE | Seed opt-in qua `AdminSeed` trong local config; không hard-code hoặc log password |
 
 ## 11. Phase 7 - Bonus Sau MVP
 
@@ -245,3 +245,4 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-15 | NguyenNgu2005 | Phase 7: bonus sau MVP - import Excel/text có preview, Markdown an toàn, export Word/PDF, thống kê nâng cao, flashcard theo deck | Test lại flow import/export/quiz trên trình duyệt | Build thành công, 0 warning, 0 error |
 | 2026-06-21 | locphan8541 | Phase 6 UI/UX hoàn tất - redesign toàn bộ 12 view với Dark Theme + Glassmorphism: Layout, Login, Register, Home, Subjects, Decks, Quiz/Take, Quiz/Result, Admin, Statistics, Profile | Kiểm tra responsive trên mobile, chuẩn bị demo data | 54 files thay đổi, +3929/-643 lines; push lên branch `feature/phase2-redesign` |
 | 2026-06-21 | locphan8541 | Fix lỗi auth page frame (CSS stacking context từ `transform` trên animation), fix avatar Profile, cải thiện readability toàn app (WCAG AA contrast tokens) | Kiểm tra toàn bộ màn hình trên nhiều độ phân giải | Đã xác nhận chạy trên http://localhost:5039 |
+| 2026-06-22 | Naams2k10fpt | Stabilize main, hoàn thiện RBAC Admin/Mentor/User, gộp schema Phase 2, sửa đáp án trống và footer đè form | Review diff rồi commit/push PR | E2E LocalDB đạt: register/login, đổi role, ownership, CRUD, import, export Word/PDF, flashcard, quiz 10/10, history/statistics, khóa tài khoản và soft delete; build 0 warning, 0 error; chưa commit |

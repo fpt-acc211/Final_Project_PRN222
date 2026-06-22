@@ -12,11 +12,11 @@ namespace Repositories
             _context = context;
         }
 
-        public List<Question> GetQuestionsForQuiz(int deckId, string userId)
-            => QuizDAO.Instance.GetQuestionsForQuiz(_context, deckId, userId);
+        public List<Question> GetQuestionsForQuiz(int deckId)
+            => QuizDAO.Instance.GetQuestionsForQuiz(_context, deckId);
 
-        public int GetQuestionCount(int deckId, string userId)
-            => QuizDAO.Instance.GetQuestionCount(_context, deckId, userId);
+        public int GetQuestionCount(int deckId)
+            => QuizDAO.Instance.GetQuestionCount(_context, deckId);
 
         public TestHistory SaveTestResult(TestHistory history)
             => QuizDAO.Instance.SaveTestResult(_context, history);

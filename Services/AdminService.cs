@@ -23,6 +23,8 @@ namespace Services
         public (int subjects, int decks, int questions, int testHistories) GetUserStats(string userId)
             => _repository.GetUserStats(userId);
 
+        public int CountActiveAdmins() => _repository.CountActiveAdmins();
+
         public void ChangeRole(User user, string newRole)
         {
             user.Role = newRole;

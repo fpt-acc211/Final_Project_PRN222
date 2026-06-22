@@ -12,9 +12,15 @@ namespace Services
             _repository = repository;
         }
 
+        public IEnumerable<Deck> GetDecksBySubjectForStudy(int subjectId)
+            => _repository.GetDecksBySubjectForStudy(subjectId);
+
         public IEnumerable<Deck> GetDecksBySubject(int subjectId, string userId) => _repository.GetDecksBySubject(subjectId, userId);
 
-        public Deck? GetDeckById(int id, string userId) => _repository.GetDeckById(id, userId);
+        public Deck? GetDeckForStudy(int id) => _repository.GetDeckForStudy(id);
+
+        public Deck? GetDeckById(int id, string userId, bool allowAll = false)
+            => _repository.GetDeckById(id, userId, allowAll);
 
         public bool NameExists(int subjectId, string name, int? excludedId = null) => _repository.NameExists(subjectId, name, excludedId);
 

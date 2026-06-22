@@ -34,9 +34,24 @@ namespace DataAccessObjects
                 .ToList();
         }
 
-        public Subject? GetSubjectById(QuizManagementDbContext context, int id, string userId)
+        public IEnumerable<Subject> GetAllSubjects(QuizManagementDbContext context)
         {
-            return context.Subjects.FirstOrDefault(s => s.Id == id && s.UserId == userId);
+            return context.Subjects
+                .OrderBy(s => s.Name)
+                .ThenBy(s => s.CreatedAt)
+                .ToList();
+        }
+
+        public Subject? GetSubjectForStudy(QuizManagementDbContext context, int id)
+        {
+            return context.Subjects.FirstOrDefault(s => s.Id == id);
+        }
+
+        public Subject? GetSubjectById(
+            QuizManagementDbContext context, int id, string userId, bool allowAll = false)
+        {
+            return context.Subjects.FirstOrDefault(s =>
+                s.Id == id && (allowAll || s.UserId == userId));
         }
 
         public bool NameExists(QuizManagementDbContext context, string userId, string name, int? excludedId = null)
