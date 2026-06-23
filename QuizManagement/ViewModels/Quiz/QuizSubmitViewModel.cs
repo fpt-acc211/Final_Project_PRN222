@@ -7,14 +7,14 @@ namespace QuizManagement.ViewModels.Quiz
     {
         public int DeckId { get; set; }
 
+        public string AttemptToken { get; set; } = string.Empty;
+
         public List<QuizQuestionSubmitItem> Questions { get; set; } = new();
     }
 
     public class QuizQuestionSubmitItem
     {
         public int QuestionId { get; set; }
-
-        public int QuestionType { get; set; }
 
         /// <summary>
         /// Đáp án được chọn cho single choice (radio button).

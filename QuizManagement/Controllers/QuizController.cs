@@ -1,27 +1,33 @@
 using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using QuizManagement.ViewModels.Quiz;
 using Services;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace QuizManagement.Controllers
 {
     [Authorize(Policy = "StudyContent")]
     public class QuizController : Controller
     {
+        private static readonly TimeSpan QuizAttemptLifetime = TimeSpan.FromHours(8);
+
         private readonly IDeckService _deckService;
         private readonly IQuizService _quizService;
+        private readonly IDataProtector _quizAttemptProtector;
 
-        public QuizController(IDeckService deckService, IQuizService quizService)
+        public QuizController(
+            IDeckService deckService,
+            IQuizService quizService,
+            IDataProtectionProvider dataProtectionProvider)
         {
             _deckService = deckService;
             _quizService = quizService;
+            _quizAttemptProtector = dataProtectionProvider.CreateProtector("QuizManagement.QuizAttempt.v1");
         }
 
-        /// <summary>
-        /// GET: Hiển thị form cấu hình bài quiz (chọn số câu hỏi)
-        /// </summary>
         public IActionResult Config(int deckId)
         {
             var deck = _deckService.GetDeckForStudy(deckId);
@@ -47,9 +53,6 @@ namespace QuizManagement.Controllers
             });
         }
 
-        /// <summary>
-        /// POST: Nhận cấu hình, lấy và shuffle câu hỏi, hiển thị giao diện làm bài
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Take(QuizConfigViewModel config)
@@ -77,16 +80,15 @@ namespace QuizManagement.Controllers
                 return View("Config", config);
             }
 
-            // Lấy câu hỏi đã shuffle (Fisher-Yates)
-            var questions = _quizService.GetQuestionsForQuiz(
-                config.DeckId, config.QuestionCount);
+            var questions = _quizService.GetQuestionsForQuiz(config.DeckId, config.QuestionCount);
+            var questionIds = questions.Select(q => q.Id).ToList();
 
-            // Map sang ViewModel - KHÔNG gửi IsCorrect ra client
             var model = new QuizTakeViewModel
             {
                 DeckId = config.DeckId,
                 DeckName = deck.Name,
                 SubjectName = deck.Subject.Name,
+                AttemptToken = ProtectQuizAttempt(config.DeckId, CurrentUserId(), questionIds),
                 Questions = questions.Select(q => new QuizQuestionViewModel
                 {
                     QuestionId = q.Id,
@@ -103,9 +105,6 @@ namespace QuizManagement.Controllers
             return View(model);
         }
 
-        /// <summary>
-        /// POST: Nhận bài làm, chấm điểm, lưu kết quả, redirect tới Result
-        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Submit(QuizSubmitViewModel model)
@@ -116,35 +115,30 @@ namespace QuizManagement.Controllers
                 return NotFound();
             }
 
-            // Chuẩn bị dữ liệu cho grading
-            var submittedAnswers = model.Questions.Select(q =>
+            var currentUserId = CurrentUserId();
+            var attempt = ReadQuizAttempt(model.AttemptToken);
+            if (attempt is null || !IsValidQuizAttempt(attempt, model.DeckId, currentUserId))
             {
-                var selectedIds = new List<int>();
+                TempData["ErrorMessage"] = "Phiên làm bài không hợp lệ hoặc đã hết hạn. Vui lòng bắt đầu lại bài quiz.";
+                return RedirectToAction(nameof(Config), new { deckId = model.DeckId });
+            }
 
-                if (q.QuestionType == 1) // Single choice
-                {
-                    if (q.SelectedAnswerId.HasValue)
-                        selectedIds.Add(q.SelectedAnswerId.Value);
-                }
-                else // Multiple choice
-                {
-                    selectedIds = q.SelectedAnswerIds ?? new List<int>();
-                }
+            var selectedAnswersByQuestion = model.Questions
+                .GroupBy(q => q.QuestionId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.SelectMany(GetSelectedAnswerIds).Distinct().ToList());
 
-                return (q.QuestionId, q.QuestionType, selectedIds);
-            }).ToList();
-
-            // Chấm điểm và lưu kết quả
             var history = _quizService.GradeAndSaveQuiz(
-                model.DeckId, CurrentUserId(), submittedAnswers);
+                model.DeckId,
+                currentUserId,
+                attempt.QuestionIds,
+                selectedAnswersByQuestion);
 
             TempData["SuccessMessage"] = "Đã nộp bài thành công!";
             return RedirectToAction(nameof(Result), new { id = history.Id });
         }
 
-        /// <summary>
-        /// GET: Hiển thị kết quả bài làm
-        /// </summary>
         public IActionResult Result(int id)
         {
             var history = _quizService.GetTestHistoryById(id, CurrentUserId());
@@ -157,12 +151,8 @@ namespace QuizManagement.Controllers
             return View(resultModel);
         }
 
-        /// <summary>
-        /// Xây dựng QuizResultViewModel từ TestHistory
-        /// </summary>
         private static QuizResultViewModel BuildResultViewModel(TestHistory history)
         {
-            // Group TestResultDetails theo QuestionId
             var questionGroups = history.TestResultDetails
                 .GroupBy(d => d.QuestionId)
                 .ToList();
@@ -209,10 +199,74 @@ namespace QuizManagement.Controllers
             };
         }
 
+        private string ProtectQuizAttempt(int deckId, string userId, List<int> questionIds)
+        {
+            var payload = new QuizAttemptPayload
+            {
+                DeckId = deckId,
+                UserId = userId,
+                QuestionIds = questionIds,
+                IssuedAtUtc = DateTimeOffset.UtcNow
+            };
+
+            return _quizAttemptProtector.Protect(JsonSerializer.Serialize(payload));
+        }
+
+        private QuizAttemptPayload? ReadQuizAttempt(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            try
+            {
+                var json = _quizAttemptProtector.Unprotect(token);
+                return JsonSerializer.Deserialize<QuizAttemptPayload>(json);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool IsValidQuizAttempt(QuizAttemptPayload attempt, int deckId, string userId)
+        {
+            return attempt.DeckId == deckId
+                && attempt.UserId == userId
+                && attempt.QuestionIds.Count > 0
+                && attempt.QuestionIds.Count <= 500
+                && DateTimeOffset.UtcNow - attempt.IssuedAtUtc <= QuizAttemptLifetime;
+        }
+
+        private static IEnumerable<int> GetSelectedAnswerIds(QuizQuestionSubmitItem question)
+        {
+            if (question.SelectedAnswerId.HasValue)
+            {
+                yield return question.SelectedAnswerId.Value;
+            }
+
+            foreach (var answerId in question.SelectedAnswerIds)
+            {
+                yield return answerId;
+            }
+        }
+
         private string CurrentUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
+        }
+
+        private sealed class QuizAttemptPayload
+        {
+            public int DeckId { get; set; }
+
+            public string UserId { get; set; } = string.Empty;
+
+            public List<int> QuestionIds { get; set; } = new();
+
+            public DateTimeOffset IssuedAtUtc { get; set; }
         }
     }
 }

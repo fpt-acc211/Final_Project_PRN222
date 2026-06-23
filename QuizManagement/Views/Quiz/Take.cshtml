@@ -23,6 +23,7 @@
 <form asp-action="Submit" method="post" id="quizForm">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="DeckId" />
+    <input type="hidden" asp-for="AttemptToken" />
 
     <div class="vstack gap-4">
         @for (int i = 0; i < Model.Questions.Count; i++)
@@ -40,7 +41,6 @@
                 <div class="fs-5 mb-3 markdown-content">@SafeMarkdown.ToHtml(question.Content)</div>
 
                 <input type="hidden" name="Questions[@i].QuestionId" value="@question.QuestionId" />
-                <input type="hidden" name="Questions[@i].QuestionType" value="@question.QuestionType" />
 
                 <div class="vstack gap-2">
                     @for (int j = 0; j < question.Answers.Count; j++)

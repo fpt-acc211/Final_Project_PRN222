@@ -12,6 +12,8 @@ namespace QuizManagement.ViewModels.Quiz
 
         public string SubjectName { get; set; } = string.Empty;
 
+        public string AttemptToken { get; set; } = string.Empty;
+
         public List<QuizQuestionViewModel> Questions { get; set; } = new();
     }
 
