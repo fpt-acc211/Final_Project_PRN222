@@ -1,6 +1,6 @@
 ﻿# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-22
+Cập nhật gần nhất: 2026-06-23
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -54,7 +54,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Kiểm tra `.gitignore` cho `bin/`, `obj/`, `.vs/` | `[x]` | All | Đã thêm `.gitignore` để bỏ qua build output và file IDE |
 | Ignore local notes | `[x]` | All | `Error.md`, `PRN222.md` không hiện trong Git status; `TASK_PROGRESS.md` được theo dõi trong Git |
 | Chuẩn hóa README / tài liệu setup | `[x]` | Leader | README mô tả setup, kiến trúc, database, roadmap, local config |
-| Tạo sample data để demo | `[ ]` | BE | Có user, subject, deck, question, answer mẫu |
+| Tạo sample data để demo | `[x]` | BE | `SeedDemoData.sql` có Admin/Mentor/User, 2 subjects, 3 decks, 21 questions |
 
 ## 5. Phase 1 - Database Và EF Core
 
@@ -200,18 +200,19 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Validate input server-side | `[x]` | BE | Auth và CRUD hiện có validate server-side bằng ViewModel/ModelState |
 | Kiểm tra ownership mọi query | `[x]` | BE | CRUD Subject/Deck/Question lọc theo user đang đăng nhập |
 | Không gửi đáp án đúng ra client trước submit | `[x]` | BE | QuizTakeViewModel không chứa IsCorrect |
+| Không tin dữ liệu quiz nhạy cảm từ client | `[x]` | BE | Submit dùng Data Protection token để xác thực deck/user/danh sách câu hỏi; `QuestionType` lấy lại từ DB |
 | Xử lý lỗi thân thiện | `[~]` | BE/FE | Có validation/NotFound cơ bản, cần error UX tốt hơn |
 | Kiểm tra N+1 query | `[~]` | BE | Có `Include` ở DAO; sẽ tối ưu thêm khi làm Quiz/History |
-| Test flow chính bằng tay | `[~]` | All | User đã test register/login; cần test CRUD end-to-end |
+| Test flow chính bằng tay | `[~]` | All | Đã có E2E LocalDB trước đó; nên chạy lại sau seed/final-readiness trước khi tag release |
 | Build final không warning nghiêm trọng | `[x]` | All | `dotnet build --no-restore` sạch lỗi tại thời điểm cập nhật |
 
 ## 13. Phase 9 - Demo Và Nộp Bài
 
 | Task | Trạng thái | Owner | Tiêu chí hoàn thành |
 | --- | --- | --- | --- |
-| Tạo database demo sạch | `[ ]` | Leader | Script chạy lại từ đầu được |
-| Tạo tài khoản demo User/Admin | `[ ]` | Leader | Đăng nhập demo nhanh |
-| Chuẩn bị dữ liệu demo | `[ ]` | Team | Có ít nhất 2 subjects, 3 decks, 20+ questions |
+| Tạo database demo sạch | `[x]` | Leader | `CreateDB.sql` + `SeedDemoData.sql` chạy lại được |
+| Tạo tài khoản demo User/Admin | `[x]` | Leader | Có `admin_demo`, `mentor_demo`, `user_demo`; password demo `Test@123456` |
+| Chuẩn bị dữ liệu demo | `[x]` | Team | Có 2 subjects, 3 decks, 21 questions và 1 lịch sử làm bài mẫu |
 | Cập nhật `PRN222.md` theo code thật | `[ ]` | Leader | Tài liệu không ghi feature chưa làm như đã xong |
 | Cập nhật README setup | `[x]` | Leader | README đã được chuẩn hóa |
 | Chuẩn bị slide/demo script | `[ ]` | Team | Nói được kiến trúc, DB, luồng quiz, điểm kỹ thuật |
@@ -246,3 +247,4 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-21 | locphan8541 | Phase 6 UI/UX hoàn tất - redesign toàn bộ 12 view với Dark Theme + Glassmorphism: Layout, Login, Register, Home, Subjects, Decks, Quiz/Take, Quiz/Result, Admin, Statistics, Profile | Kiểm tra responsive trên mobile, chuẩn bị demo data | 54 files thay đổi, +3929/-643 lines; push lên branch `feature/phase2-redesign` |
 | 2026-06-21 | locphan8541 | Fix lỗi auth page frame (CSS stacking context từ `transform` trên animation), fix avatar Profile, cải thiện readability toàn app (WCAG AA contrast tokens) | Kiểm tra toàn bộ màn hình trên nhiều độ phân giải | Đã xác nhận chạy trên http://localhost:5039 |
 | 2026-06-22 | Naams2k10fpt | Stabilize main, hoàn thiện RBAC Admin/Mentor/User, gộp schema Phase 2, sửa đáp án trống và footer đè form | Review diff rồi commit/push PR | E2E LocalDB đạt: register/login, đổi role, ownership, CRUD, import, export Word/PDF, flashcard, quiz 10/10, history/statistics, khóa tài khoản và soft delete; build 0 warning, 0 error; chưa commit |
+| 2026-06-23 | Naams2k10fpt | Final readiness: harden quiz submit bằng signed attempt token, thêm `SeedDemoData.sql`, chuẩn hóa config mẫu và tài liệu | Chạy lại demo flow trên browser, kiểm tra responsive, chuẩn bị slide/tag release | Build cần kiểm tra lại sau khi hoàn tất chỉnh tài liệu |

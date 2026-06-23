@@ -17,13 +17,10 @@ namespace Services
         {
             var allQuestions = _repository.GetQuestionsForQuiz(deckId);
 
-            // Fisher-Yates shuffle cho câu hỏi
             Shuffle(allQuestions);
 
-            // Lấy số câu hỏi theo yêu cầu
             var selected = allQuestions.Take(questionCount).ToList();
 
-            // Fisher-Yates shuffle cho đáp án mỗi câu
             foreach (var question in selected)
             {
                 var answers = question.Answers.ToList();
@@ -38,10 +35,11 @@ namespace Services
             => _repository.GetQuestionCount(deckId);
 
         public TestHistory GradeAndSaveQuiz(
-            int deckId, string userId,
-            List<(int QuestionId, int QuestionType, List<int> SelectedAnswerIds)> submittedAnswers)
+            int deckId,
+            string userId,
+            IReadOnlyList<int> questionIds,
+            IReadOnlyDictionary<int, List<int>> selectedAnswerIdsByQuestion)
         {
-            // Lấy tất cả câu hỏi + đáp án đúng từ DB
             var allQuestions = _repository.GetQuestionsForQuiz(deckId);
             var questionDict = allQuestions.ToDictionary(q => q.Id);
 
@@ -49,39 +47,43 @@ namespace Services
             int correctCount = 0;
             int totalCount = 0;
 
-            foreach (var (questionId, questionType, selectedAnswerIds) in submittedAnswers)
+            foreach (var questionId in questionIds.Distinct())
             {
-                // Chỉ xử lý câu hỏi thuộc deck này
                 if (!questionDict.TryGetValue(questionId, out var question))
                     continue;
 
                 totalCount++;
 
-                // Lấy tập đáp án đúng
+                var answerIdsForQuestion = question.Answers
+                    .Select(a => a.Id)
+                    .ToHashSet();
+
                 var correctAnswerIds = question.Answers
                     .Where(a => a.IsCorrect)
                     .Select(a => a.Id)
                     .ToHashSet();
 
-                var selectedSet = selectedAnswerIds.ToHashSet();
+                var selectedSet = selectedAnswerIdsByQuestion.TryGetValue(questionId, out var selectedAnswerIds)
+                    ? selectedAnswerIds.Where(answerIdsForQuestion.Contains).ToHashSet()
+                    : new HashSet<int>();
 
-                // Chấm điểm
                 bool isCorrect;
-                if (questionType == 1) // Single choice
+                if (question.QuestionType == 1)
                 {
                     isCorrect = selectedSet.Count == 1 && correctAnswerIds.Contains(selectedSet.First());
                 }
-                else // Multiple choice
+                else
                 {
                     isCorrect = correctAnswerIds.SetEquals(selectedSet);
                 }
 
-                if (isCorrect) correctCount++;
+                if (isCorrect)
+                {
+                    correctCount++;
+                }
 
-                // Tạo TestResultDetail rows
                 if (selectedSet.Count == 0)
                 {
-                    // Câu chưa trả lời
                     details.Add(new TestResultDetail
                     {
                         QuestionId = questionId,
@@ -103,7 +105,6 @@ namespace Services
                 }
             }
 
-            // Tính điểm
             double percentage = totalCount > 0 ? (double)correctCount / totalCount * 100 : 0;
             double score = totalCount > 0 ? (double)correctCount / totalCount * 10 : 0;
 
@@ -132,9 +133,6 @@ namespace Services
         public (int totalQuizzes, double averagePercentage, DateTime? lastQuizDate) GetQuizStatistics(string userId)
             => _repository.GetQuizStatistics(userId);
 
-        /// <summary>
-        /// Fisher-Yates shuffle algorithm
-        /// </summary>
         private static void Shuffle<T>(List<T> list)
         {
             for (int i = list.Count - 1; i > 0; i--)
