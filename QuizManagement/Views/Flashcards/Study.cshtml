@@ -33,18 +33,34 @@ else
             <button type="button" id="nextCardButton" class="btn btn-outline-secondary">Tiếp</button>
         </div>
 
-        <div id="flashcardSurface" class="flashcard-surface" role="button" tabindex="0">
-            <div class="flashcard-side-label" id="cardType"></div>
-            <div class="flashcard-question" id="questionText"></div>
-            <div id="answerPanel" class="flashcard-answer d-none">
-                <div class="fw-semibold mb-2">Đáp án đúng</div>
-                <ul id="answerList" class="mb-0"></ul>
-                <div id="explanationText" class="mt-3 text-muted"></div>
+        <div class="fc-scene">
+            <div id="flashcardInner" class="fc-card">
+                <!-- FRONT: Question + Answer Options -->
+                <div class="fc-face fc-face--front">
+                    <div class="flashcard-side-label" id="cardTypeFront"></div>
+                    <div class="flashcard-question" id="questionTextFront"></div>
+                    <div class="fc-options" id="optionsPanel"></div>
+                    <div class="fc-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+                        Nhấn để lật thẻ
+                    </div>
+                </div>
+                <!-- BACK: Correct Answer + Explanation -->
+                <div class="fc-face fc-face--back">
+                    <div class="flashcard-side-label">Đáp án</div>
+                    <div class="fc-back-content">
+                        <div id="backAnswerList" class="fc-back-answers"></div>
+                        <div id="backExplanation" class="fc-back-explanation"></div>
+                    </div>
+                    <div class="fc-hint">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+                        Nhấn để lật lại
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="flashcard-actions">
-            <button type="button" id="revealButton" class="btn btn-primary px-4">Lật thẻ</button>
             <button type="button" id="againButton" class="btn btn-outline-danger d-none">Cần học lại</button>
             <button type="button" id="knownButton" class="btn btn-outline-success d-none">Đã nhớ</button>
             <button type="button" id="shuffleButton" class="btn btn-outline-secondary">Trộn thẻ</button>
@@ -55,17 +71,16 @@ else
         (() => {
             const cards = @Html.Raw(json);
             let currentIndex = 0;
-            let revealed = false;
+            let flipped = false;
             let knownCount = 0;
             let againCount = 0;
 
-            const flashcardSurface = document.getElementById('flashcardSurface');
-            const questionText = document.getElementById('questionText');
-            const cardType = document.getElementById('cardType');
-            const answerPanel = document.getElementById('answerPanel');
-            const answerList = document.getElementById('answerList');
-            const explanationText = document.getElementById('explanationText');
-            const revealButton = document.getElementById('revealButton');
+            const cardInner = document.getElementById('flashcardInner');
+            const questionTextFront = document.getElementById('questionTextFront');
+            const cardTypeFront = document.getElementById('cardTypeFront');
+            const optionsPanel = document.getElementById('optionsPanel');
+            const backAnswerList = document.getElementById('backAnswerList');
+            const backExplanation = document.getElementById('backExplanation');
             const againButton = document.getElementById('againButton');
             const knownButton = document.getElementById('knownButton');
             const shuffleButton = document.getElementById('shuffleButton');
@@ -74,39 +89,63 @@ else
             const cardCounter = document.getElementById('cardCounter');
             const studyCounter = document.getElementById('studyCounter');
 
+            const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
             function renderCard() {
                 const card = cards[currentIndex];
-                revealed = false;
+                flipped = false;
+                cardInner.classList.remove('fc-card--flipped');
 
-                questionText.textContent = card.Content || '';
-                cardType.textContent = card.QuestionType === 1 ? 'Một đáp án đúng' : 'Nhiều đáp án đúng';
-                answerList.textContent = '';
+                // Front side
+                questionTextFront.textContent = card.Content || '';
+                cardTypeFront.textContent = card.QuestionType === 1 ? 'Một đáp án đúng' : 'Nhiều đáp án đúng';
 
-                for (const answer of card.CorrectAnswers || []) {
-                    const item = document.createElement('li');
-                    item.textContent = answer;
-                    answerList.appendChild(item);
+                // Options on front
+                optionsPanel.innerHTML = '';
+                for (let i = 0; i < (card.AllAnswers || []).length; i++) {
+                    const opt = card.AllAnswers[i];
+                    const el = document.createElement('div');
+                    el.className = 'fc-option';
+                    el.innerHTML = `<span class="fc-option-label">${labels[i] || (i + 1)}</span><span class="fc-option-text">${escapeHtml(opt.Content)}</span>`;
+                    optionsPanel.appendChild(el);
                 }
 
-                explanationText.textContent = card.Explanation ? 'Giải thích: ' + card.Explanation : '';
-                answerPanel.classList.add('d-none');
-                revealButton.classList.remove('d-none');
+                // Back side
+                backAnswerList.innerHTML = '';
+                for (let i = 0; i < (card.AllAnswers || []).length; i++) {
+                    const opt = card.AllAnswers[i];
+                    const el = document.createElement('div');
+                    el.className = 'fc-back-option' + (opt.IsCorrect ? ' fc-back-option--correct' : ' fc-back-option--wrong');
+                    el.innerHTML = `<span class="fc-option-label">${labels[i] || (i + 1)}</span><span class="fc-option-text">${escapeHtml(opt.Content)}</span>${opt.IsCorrect ? '<svg class="fc-check-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>' : ''}`;
+                    backAnswerList.appendChild(el);
+                }
+
+                if (card.Explanation) {
+                    backExplanation.innerHTML = `<div class="fc-explanation-title">Giải thích</div><div class="fc-explanation-body">${escapeHtml(card.Explanation)}</div>`;
+                    backExplanation.classList.remove('d-none');
+                } else {
+                    backExplanation.innerHTML = '';
+                    backExplanation.classList.add('d-none');
+                }
+
+                // Buttons
                 againButton.classList.add('d-none');
                 knownButton.classList.add('d-none');
                 cardCounter.textContent = `Thẻ ${currentIndex + 1}/${cards.length}`;
                 studyCounter.textContent = `${knownCount} đã nhớ · ${againCount} cần học lại`;
             }
 
-            function revealCard() {
-                if (revealed) {
-                    return;
-                }
+            function flipCard() {
+                flipped = !flipped;
+                cardInner.classList.toggle('fc-card--flipped', flipped);
 
-                revealed = true;
-                answerPanel.classList.remove('d-none');
-                revealButton.classList.add('d-none');
-                againButton.classList.remove('d-none');
-                knownButton.classList.remove('d-none');
+                if (flipped) {
+                    againButton.classList.remove('d-none');
+                    knownButton.classList.remove('d-none');
+                } else {
+                    againButton.classList.add('d-none');
+                    knownButton.classList.add('d-none');
+                }
             }
 
             function move(delta) {
@@ -132,18 +171,34 @@ else
                 renderCard();
             }
 
-            revealButton.addEventListener('click', revealCard);
-            flashcardSurface.addEventListener('click', revealCard);
-            flashcardSurface.addEventListener('keydown', event => {
-                if (event.key === 'Enter' || event.key === ' ') {
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Event listeners
+            cardInner.addEventListener('click', flipCard);
+            document.addEventListener('keydown', event => {
+                if (event.key === ' ' || event.key === 'Enter') {
                     event.preventDefault();
-                    revealCard();
+                    flipCard();
                 }
                 if (event.key === 'ArrowRight') {
                     move(1);
                 }
                 if (event.key === 'ArrowLeft') {
                     move(-1);
+                }
+                if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    flipCard();
+                }
+                if (flipped && event.key === '1') {
+                    markAndMove(false);
+                }
+                if (flipped && event.key === '2') {
+                    markAndMove(true);
                 }
             });
             prevCardButton.addEventListener('click', () => move(-1));

@@ -42,6 +42,14 @@ namespace QuizManagement.Controllers
                         .Where(answer => answer.IsCorrect)
                         .OrderBy(answer => answer.Id)
                         .Select(answer => answer.Content)
+                        .ToList(),
+                    AllAnswers = question.Answers
+                        .OrderBy(answer => answer.Id)
+                        .Select(answer => new FlashcardAnswerOption
+                        {
+                            Content = answer.Content,
+                            IsCorrect = answer.IsCorrect
+                        })
                         .ToList()
                 }).ToList()
             };
