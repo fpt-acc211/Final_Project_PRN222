@@ -22,5 +22,14 @@ namespace QuizManagement.ViewModels.Flashcards
         public string? Explanation { get; set; }
 
         public List<string> CorrectAnswers { get; set; } = new();
+
+        public List<FlashcardAnswerOption> AllAnswers { get; set; } = new();
+    }
+
+    public class FlashcardAnswerOption
+    {
+        public string Content { get; set; } = string.Empty;
+
+        public bool IsCorrect { get; set; }
     }
 }

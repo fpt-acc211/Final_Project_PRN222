@@ -917,18 +917,172 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   gap: 0.75rem; margin-bottom: 1rem;
 }
 .flashcard-actions { justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
-.flashcard-surface {
-  min-height: 360px; border: 1.5px solid var(--border);
-  border-radius: var(--r-lg); background: var(--bg-surface);
-  box-shadow: var(--shadow); padding: 2rem;
-  display: flex; flex-direction: column; justify-content: center;
-  cursor: pointer; outline: none; transition: border-color var(--t), box-shadow var(--t);
-}
-.flashcard-surface:hover { border-color: var(--border-hover); box-shadow: var(--shadow-lg); }
-.flashcard-surface:focus { box-shadow: 0 0 0 3px var(--accent-light), var(--shadow-lg); }
 .flashcard-side-label { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.5px; }
-.flashcard-question { font-size: 1.5rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-.flashcard-answer { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.25rem; }
+.flashcard-question { font-size: 1.35rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; margin-bottom: 1.25rem; }
+
+/* 3D Flip Card */
+.fc-scene {
+  perspective: 1200px;
+  margin-bottom: 0.5rem;
+}
+.fc-card {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.fc-card--flipped {
+  transform: rotateX(180deg);
+}
+.fc-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.fc-face:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+}
+.fc-face--front {
+  z-index: 2;
+  transform: rotateX(0deg);
+}
+.fc-face--back {
+  transform: rotateX(180deg);
+}
+
+/* Front side - Answer Options */
+.fc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+}
+.fc-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+.fc-option-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.fc-option-text {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+/* Back side - Answer Results */
+.fc-back-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.fc-back-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fc-back-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.95rem;
+  border: 1.5px solid transparent;
+  transition: all var(--t);
+}
+.fc-back-option--correct {
+  background: rgba(25, 135, 84, 0.1);
+  border-color: #198754;
+  color: var(--text);
+}
+.fc-back-option--correct .fc-option-label {
+  background: #198754;
+  color: #fff;
+}
+.fc-back-option--wrong {
+  background: var(--bg);
+  border-color: var(--border);
+  opacity: 0.55;
+}
+.fc-back-option--wrong .fc-option-label {
+  background: var(--border);
+  color: var(--text-muted);
+}
+.fc-check-icon {
+  color: #198754;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Back side - Explanation */
+.fc-back-explanation {
+  margin-top: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--r-md);
+  background: var(--accent-light);
+  border-left: 4px solid var(--accent);
+}
+.fc-explanation-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.fc-explanation-body {
+  font-size: 0.92rem;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* Hint text at bottom */
+.fc-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  opacity: 0.6;
+  transition: opacity var(--t);
+}
+.fc-card:hover .fc-hint {
+  opacity: 1;
+}
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
@@ -987,8 +1141,11 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   .quizlet-panel-header, .flashcard-toolbar { flex-direction: column; align-items: stretch; }
   .quizlet-answer-row { grid-template-columns: 32px minmax(0,1fr); }
   .quizlet-answer-actions { grid-column: 1 / -1; justify-content: flex-end; }
-  .flashcard-surface { min-height: 280px; padding: 1.25rem; }
-  .flashcard-question { font-size: 1.2rem; }
+  .fc-card { min-height: 320px; }
+  .fc-face { padding: 1.25rem; }
+  .flashcard-question { font-size: 1.15rem; }
+  .fc-option { padding: 0.55rem 0.75rem; font-size: 0.88rem; }
+  .fc-back-option { padding: 0.55rem 0.75rem; font-size: 0.88rem; }
 
   .admin-stat { padding: 0.9rem 1rem; }
   .admin-stat-value { font-size: 1.4rem; }
