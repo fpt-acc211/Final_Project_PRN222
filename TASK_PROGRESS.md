@@ -19,7 +19,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Hạng mục | Trạng thái | Ghi chú |
 | --- | --- | --- |
 | Solution N-Tier | `[x]` | Đã có `BusinessObjects`, `DataAccessObjects`, `Repositories`, `Services`, `QuizManagement` |
-| Database script | `[x]` | `CreateDB.sql` đã có các bảng chính và `TestResultDetails` |
+| Database script | `[x]` | `CreateDB.sql` chạy được cho database mới hoặc database đã tồn tại; tự bổ sung bảng/cột/index/FK còn thiếu |
 | Entities / DbContext | `[x]` | Đã scaffold models và `QuizManagementDbContext` |
 | DAO layer | `[x]` | Đã thêm `SubjectDAO`, `DeckDAO`, `QuestionDAO` theo mẫu `DAO.Instance` |
 | Repository / Service | `[x]` | Repository gọi DAO, Service xử lý nghiệp vụ/validation |
@@ -37,6 +37,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Thống kê Mentor | `[x]` | Stat-card + bảng theo môn/bộ đề; Mentor chỉ thấy dữ liệu sở hữu |
 | Báo cáo câu hỏi | `[x]` | Bảng `QuestionReports`; user báo từ Result; Mentor/Admin xử lý |
 | LoginAttempts log | `[x]` | Ghi DB mọi lần đăng nhập; Admin xem và lọc theo kết quả |
+| Automated tests | `[x]` | `QuizManagement.Tests` có 25 test pass cho service, repository và controller |
 
 ## 3. Thứ Tự Ưu Tiên MVP
 
@@ -60,7 +61,7 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Kiểm tra `.gitignore` cho `bin/`, `obj/`, `.vs/` | `[x]` | All | Đã thêm `.gitignore` để bỏ qua build output và file IDE |
 | Ignore local notes | `[x]` | All | `Error.md`, `PRN222.md` không hiện trong Git status; `TASK_PROGRESS.md` được theo dõi trong Git |
 | Chuẩn hóa README / tài liệu setup | `[x]` | Leader | README mô tả setup, kiến trúc, database, roadmap, local config |
-| Tạo sample data để demo | `[x]` | BE | `SeedDemoData.sql` có Admin/Mentor/User, 2 subjects, 3 decks, 21 questions |
+| Tạo sample data để demo | `[x]` | BE | `SeedDemoData.sql` chạy lại được, có Admin/Mentor/User, subjects, decks, questions, history, reports và login attempts |
 
 ## 5. Phase 1 - Database Và EF Core
 
@@ -209,8 +210,9 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Không tin dữ liệu quiz nhạy cảm từ client | `[x]` | BE | Submit dùng Data Protection token để xác thực deck/user/danh sách câu hỏi; `QuestionType` lấy lại từ DB |
 | Xử lý lỗi thân thiện | `[~]` | BE/FE | Có validation/NotFound cơ bản, cần error UX tốt hơn |
 | Kiểm tra N+1 query | `[~]` | BE | Có `Include` ở DAO; sẽ tối ưu thêm khi làm Quiz/History |
-| Test flow chính bằng tay | `[~]` | All | Đã có E2E LocalDB trước đó; nên chạy lại sau seed/final-readiness trước khi tag release |
-| Build final không warning nghiêm trọng | `[x]` | All | `dotnet build --no-restore` sạch lỗi tại thời điểm cập nhật |
+| Test flow chính bằng tay | `[~]` | All | Đã có E2E LocalDB trước đó; cần chạy lại trên UI trước khi tag release |
+| Automated tests cho logic chính | `[x]` | BE | `dotnet test .\QuizManagementSystem.slnx --no-restore` pass 25/25 |
+| Build final không warning nghiêm trọng | `[x]` | All | `dotnet build --no-restore` sạch lỗi; test suite pass tại thời điểm cập nhật |
 
 ## 13. Phase 9 - Demo Và Nộp Bài
 
@@ -244,6 +246,12 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Ghi log lần đăng nhập vào DB | `[x]` | BE | Bảng `LoginAttempts` mới; `AccountController` ghi cả login thành công/thất bại |
 | Trang Admin xem lịch sử đăng nhập | `[x]` | BE/FE | `/Admin/LoginAttempts` với filter Tất cả/Thất bại/Thành công, hiện Email/IP/Kết quả/Thời gian |
 | Flashcard 3D flip animation | `[x]` | FE | Teammate PR — animation lật thẻ 3D khi học flashcard |
+| Cập nhật `CreateDB.sql` dạng idempotent | `[x]` | BE | Member có thể chạy lại script để cập nhật DB thiếu cột/bảng mà không cần drop database |
+| Cập nhật `SeedDemoData.sql` dạng rerunnable | `[x]` | BE | Seed xóa/tạo lại dữ liệu demo theo nhóm seed-owned, không nhân bản dữ liệu khi chạy nhiều lần |
+| Kiểm tra hết hạn quiz ở server | `[x]` | BE | Quiz token có `ExpiresAtUtc`; submit quá hạn bị từ chối sau grace period |
+| Siết quyền xử lý báo cáo câu hỏi | `[x]` | BE | Mentor chỉ resolve report thuộc học liệu mình sở hữu; Admin resolve tất cả |
+| Validate báo cáo câu hỏi | `[x]` | BE | Chặn reason không hợp lệ và chặn duplicate pending report của cùng user/câu hỏi |
+| Thêm project test | `[x]` | BE | `QuizManagement.Tests` bao phủ quiz, import, report, login attempts; 25 test pass |
 
 ## 15. Definition Of Done Cho Mỗi Feature
 
@@ -257,7 +265,7 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 - Đã test bằng tay ít nhất một lần với dữ liệu thật.
 - Không làm hỏng flow đã có.
 
-## 15. Nhật Ký Tiến Độ
+## 16. Nhật Ký Tiến Độ
 
 | Ngày | Người làm | Việc đã làm | Việc tiếp theo | Ghi chú |
 | --- | --- | --- | --- | --- |
@@ -276,3 +284,4 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-23 | Naams2k10fpt | Final readiness: harden quiz submit bằng signed attempt token, thêm `SeedDemoData.sql`, chuẩn hóa config mẫu và tài liệu | Chạy lại demo flow trên browser, kiểm tra responsive, chuẩn bị slide/tag release | Build cần kiểm tra lại sau khi hoàn tất chỉnh tài liệu |
 | 2026-06-24 | locphan8541 | Phase 10: thêm search box JS real-time cho Subjects và Decks; Mentor đặt `TimeLimitMinutes` trên Deck; countdown timer tự nộp bài; Leaderboard theo deck; Thống kê nội dung Mentor | Kiểm tra leaderboard và mentor stats trên trình duyệt | ALTER TABLE thêm `TimeLimitMinutes INT NOT NULL DEFAULT 0` cho Decks |
 | 2026-06-24 | locphan8541 | Phase 10 (tiếp): Báo cáo câu hỏi sai (bảng `QuestionReports`, nút báo cáo trên Result, trang quản lý cho Mentor/Admin); ghi log `LoginAttempts` vào DB; trang Admin xem lịch sử đăng nhập; pull flashcard 3D flip từ teammate | Cập nhật TASK_PROGRESS.md và push lên branch mới | Build thành công 0 warning 0 error; app chạy tại http://localhost:5039 |
+| 2026-06-24 | Naams2k10fpt | Phase 10 hardening: gộp migration vào `CreateDB.sql`, cập nhật `SeedDemoData.sql`, siết quyền report, kiểm tra hết hạn quiz ở server, thêm `QuizManagement.Tests` | Commit theo từng phần rồi push branch `feature/phase10-june24-tests` | `dotnet test .\QuizManagementSystem.slnx --no-restore` pass 25/25 |
