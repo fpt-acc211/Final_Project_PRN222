@@ -49,7 +49,8 @@ namespace QuizManagement.Controllers
                 DeckName = deck.Name,
                 SubjectName = deck.Subject.Name,
                 AvailableQuestionCount = availableCount,
-                QuestionCount = Math.Min(10, availableCount)
+                QuestionCount = Math.Min(10, availableCount),
+                TimeLimitMinutes = deck.TimeLimitMinutes
             });
         }
 
@@ -89,6 +90,7 @@ namespace QuizManagement.Controllers
                 DeckName = deck.Name,
                 SubjectName = deck.Subject.Name,
                 AttemptToken = ProtectQuizAttempt(config.DeckId, CurrentUserId(), questionIds),
+                TimeLimitSeconds = deck.TimeLimitMinutes > 0 ? deck.TimeLimitMinutes * 60 : 0,
                 Questions = questions.Select(q => new QuizQuestionViewModel
                 {
                     QuestionId = q.Id,

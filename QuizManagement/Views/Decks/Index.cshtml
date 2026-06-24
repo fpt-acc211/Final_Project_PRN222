@@ -7,7 +7,7 @@
     ViewData["Title"] = "Bộ đề";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h1 class="h3 mb-1">Bộ đề</h1>
         <p style="color:var(--text-muted);margin:0;">
@@ -21,6 +21,11 @@
         <a asp-action="Create" asp-route-subjectId="@subject.Id" class="btn btn-primary">+ Tạo bộ đề</a>
     }
 </div>
+
+<div class="mb-4">
+    <input id="deckSearch" type="search" class="form-control" placeholder="Tìm bộ đề..." autocomplete="off" />
+</div>
+<div id="emptySearch" class="alert alert-info d-none">Không tìm thấy bộ đề nào khớp.</div>
 
 @if (TempData["SuccessMessage"] is string successMessage)
 {
@@ -49,6 +54,8 @@ else
                        class="btn btn-sm btn-outline-secondary">Flashcard</a>
                     <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@deck.Id"
                        class="btn btn-sm btn-outline-secondary">Câu hỏi</a>
+                    <a asp-controller="Statistics" asp-action="Leaderboard" asp-route-deckId="@deck.Id"
+                       class="btn btn-sm btn-outline-secondary">Bảng XH</a>
                     @if (canManage)
                     {
                         <a asp-controller="DeckExport" asp-action="Word" asp-route-deckId="@deck.Id"
@@ -66,4 +73,26 @@ else
             </div>
         }
     </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById('deckSearch');
+            var empty = document.getElementById('emptySearch');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var q = this.value.trim().toLowerCase();
+                var cards = document.querySelectorAll('.item-grid .item-card');
+                var visible = 0;
+                cards.forEach(function (card) {
+                    var title = card.querySelector('.item-card__title');
+                    var match = !q || (title && title.textContent.toLowerCase().includes(q));
+                    card.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+                empty.classList.toggle('d-none', visible > 0 || !q);
+            });
+        })();
+    </script>
 }

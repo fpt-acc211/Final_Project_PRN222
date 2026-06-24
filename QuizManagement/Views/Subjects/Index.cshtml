@@ -6,7 +6,7 @@
     var canCreate = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Mentor);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h1 class="h3 mb-1">Môn học</h1>
         <p style="color:var(--text-muted);margin:0;">Quản lý các nhóm kiến thức và bộ đề của bạn.</p>
@@ -16,6 +16,11 @@
         <a asp-action="Create" class="btn btn-primary">+ Tạo môn học</a>
     }
 </div>
+
+<div class="mb-4">
+    <input id="subjectSearch" type="search" class="form-control" placeholder="Tìm môn học..." autocomplete="off" />
+</div>
+<div id="emptySearch" class="alert alert-info d-none">Không tìm thấy môn học nào khớp.</div>
 
 @if (TempData["SuccessMessage"] is string successMessage)
 {
@@ -55,4 +60,26 @@ else
             </div>
         }
     </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById('subjectSearch');
+            var empty = document.getElementById('emptySearch');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var q = this.value.trim().toLowerCase();
+                var cards = document.querySelectorAll('.item-grid .item-card');
+                var visible = 0;
+                cards.forEach(function (card) {
+                    var title = card.querySelector('.item-card__title');
+                    var match = !q || (title && title.textContent.toLowerCase().includes(q));
+                    card.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+                empty.classList.toggle('d-none', visible > 0 || !q);
+            });
+        })();
+    </script>
 }

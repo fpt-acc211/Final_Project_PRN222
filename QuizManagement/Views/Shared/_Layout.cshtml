@@ -40,6 +40,15 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="History" asp-action="Index">Lịch sử</a>
                             </li>
+                            @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Mentor))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Statistics" asp-action="MentorStats">Thống kê nội dung</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="QuestionReports" asp-action="Index">Báo cáo lỗi</a>
+                                </li>
+                            }
                             @if (User.IsInRole(AppRoles.Admin))
                             {
                                 <li class="nav-item">

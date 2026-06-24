@@ -14,6 +14,9 @@ namespace QuizManagement.ViewModels.Quiz
 
         public string AttemptToken { get; set; } = string.Empty;
 
+        /// <summary>0 = không giới hạn thời gian</summary>
+        public int TimeLimitSeconds { get; set; } = 0;
+
         public List<QuizQuestionViewModel> Questions { get; set; } = new();
     }
 

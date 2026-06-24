@@ -133,6 +133,12 @@ namespace Services
         public (int totalQuizzes, double averagePercentage, DateTime? lastQuizDate) GetQuizStatistics(string userId)
             => _repository.GetQuizStatistics(userId);
 
+        public List<TestHistory> GetTestHistoriesByDeck(int deckId)
+            => _repository.GetTestHistoriesByDeck(deckId);
+
+        public List<TestHistory> GetTestHistoriesByContentOwner(string ownerUserId, bool isAdmin)
+            => _repository.GetTestHistoriesByContentOwner(ownerUserId, isAdmin);
+
         private static void Shuffle<T>(List<T> list)
         {
             for (int i = list.Count - 1; i > 0; i--)

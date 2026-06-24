@@ -16,5 +16,8 @@ namespace QuizManagement.ViewModels.Quiz
         public int QuestionCount { get; set; } = 10;
 
         public int AvailableQuestionCount { get; set; }
+
+        // Populated from deck.TimeLimitMinutes — not user input
+        public int TimeLimitMinutes { get; set; } = 0;
     }
 }

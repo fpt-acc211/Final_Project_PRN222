@@ -21,6 +21,8 @@ public partial class Deck
 
     public string? UpdatedBy { get; set; }
 
+    public int TimeLimitMinutes { get; set; }
+
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
 
     public virtual Subject Subject { get; set; } = null!;

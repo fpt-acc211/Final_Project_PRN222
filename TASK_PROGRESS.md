@@ -1,6 +1,6 @@
 ﻿# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-23
+Cập nhật gần nhất: 2026-06-24
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -31,6 +31,12 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Quiz engine | `[x]` | Đã có tạo bài, shuffle Fisher-Yates, chấm điểm single/multiple choice, lưu lịch sử |
 | UI final | `[x]` | Dark Theme + Glassmorphism hoàn tất; readability cải thiện đạt WCAG AA |
 | Admin panel | `[x]` | Admin/Index, Admin/Users, phân quyền Policy `ManageUsers` |
+| Search client-side | `[x]` | Search box JS real-time cho Subjects/Decks, không reload trang |
+| Timer quiz | `[x]` | Mentor đặt thời gian trên Deck; countdown tự nộp bài khi hết giờ |
+| Leaderboard | `[x]` | Top 20 theo bộ đề, huy chương vàng/bạc/đồng |
+| Thống kê Mentor | `[x]` | Stat-card + bảng theo môn/bộ đề; Mentor chỉ thấy dữ liệu sở hữu |
+| Báo cáo câu hỏi | `[x]` | Bảng `QuestionReports`; user báo từ Result; Mentor/Admin xử lý |
+| LoginAttempts log | `[x]` | Ghi DB mọi lần đăng nhập; Admin xem và lọc theo kết quả |
 
 ## 3. Thứ Tự Ưu Tiên MVP
 
@@ -219,7 +225,27 @@ Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final 
 | Quay/chụp ảnh màn hình nếu cần | `[ ]` | Team | Có bằng chứng tính năng chính |
 | Tag/release bản nộp | `[ ]` | Leader | Code final rõ ràng, không lẫn file tạm |
 
-## 14. Definition Of Done Cho Mỗi Feature
+## 14. Phase 10 - Tính Năng Bổ Sung (2026-06-24)
+
+| Task | Trạng thái | Owner | Tiêu chí hoàn thành |
+| --- | --- | --- | --- |
+| Search box client-side cho Subjects | `[x]` | FE | JS filter real-time trên `item-card` không reload trang |
+| Search box client-side cho Decks | `[x]` | FE | JS filter trên danh sách deck, có empty state khi không có kết quả |
+| Mentor đặt giới hạn thời gian trên Deck | `[x]` | BE/FE | Thêm `TimeLimitMinutes` vào `Decks` (ALTER TABLE), Mentor chọn qua dropdown trong Create/Edit |
+| Countdown timer khi làm bài | `[x]` | FE | Timer hiển thị trên header, chuyển đỏ khi còn 60s, tự nộp bài khi về 0 |
+| Trang cấu hình quiz chỉ hiển thị thời gian | `[x]` | FE | `Config.cshtml` chỉ hiện badge thời gian (không cho user chỉnh); đọc từ `deck.TimeLimitMinutes` |
+| Leaderboard theo bộ đề | `[x]` | BE/FE | `/Statistics/Leaderboard?deckId=X` — top 20 theo điểm cao nhất, huy chương vàng/bạc/đồng |
+| Thống kê nội dung cho Mentor | `[x]` | BE/FE | `/Statistics/MentorStats` — 4 stat-card, bảng theo môn và theo bộ đề; Mentor chỉ thấy dữ liệu sở hữu |
+| Nút bảng xếp hạng trên trang Decks | `[x]` | FE | Nút "Bảng XH" trên mỗi deck card liên kết vào Leaderboard |
+| Link nav Thống kê / Báo cáo lỗi cho Mentor | `[x]` | FE | `_Layout.cshtml` hiện "Thống kê nội dung" và "Báo cáo lỗi" nếu là Mentor hoặc Admin |
+| Báo cáo câu hỏi sai | `[x]` | BE/FE | Bảng `QuestionReports` mới; user báo từ trang Result; Mentor/Admin xem và đánh dấu đã xử lý |
+| Form báo cáo câu hỏi | `[x]` | FE | Dropdown lý do (WrongAnswer/UnclearQuestion/DuplicateQuestion/Other) + ghi chú tuỳ chọn |
+| Trang quản lý báo cáo lỗi | `[x]` | FE | Bảng chờ xử lý, nút "Đã xử lý" và "Sửa câu hỏi", phần báo cáo đã giải quyết thu gọn |
+| Ghi log lần đăng nhập vào DB | `[x]` | BE | Bảng `LoginAttempts` mới; `AccountController` ghi cả login thành công/thất bại |
+| Trang Admin xem lịch sử đăng nhập | `[x]` | BE/FE | `/Admin/LoginAttempts` với filter Tất cả/Thất bại/Thành công, hiện Email/IP/Kết quả/Thời gian |
+| Flashcard 3D flip animation | `[x]` | FE | Teammate PR — animation lật thẻ 3D khi học flashcard |
+
+## 15. Definition Of Done Cho Mỗi Feature
 
 Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau:
 
@@ -248,3 +274,5 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-21 | locphan8541 | Fix lỗi auth page frame (CSS stacking context từ `transform` trên animation), fix avatar Profile, cải thiện readability toàn app (WCAG AA contrast tokens) | Kiểm tra toàn bộ màn hình trên nhiều độ phân giải | Đã xác nhận chạy trên http://localhost:5039 |
 | 2026-06-22 | Naams2k10fpt | Stabilize main, hoàn thiện RBAC Admin/Mentor/User, gộp schema Phase 2, sửa đáp án trống và footer đè form | Review diff rồi commit/push PR | E2E LocalDB đạt: register/login, đổi role, ownership, CRUD, import, export Word/PDF, flashcard, quiz 10/10, history/statistics, khóa tài khoản và soft delete; build 0 warning, 0 error; chưa commit |
 | 2026-06-23 | Naams2k10fpt | Final readiness: harden quiz submit bằng signed attempt token, thêm `SeedDemoData.sql`, chuẩn hóa config mẫu và tài liệu | Chạy lại demo flow trên browser, kiểm tra responsive, chuẩn bị slide/tag release | Build cần kiểm tra lại sau khi hoàn tất chỉnh tài liệu |
+| 2026-06-24 | locphan8541 | Phase 10: thêm search box JS real-time cho Subjects và Decks; Mentor đặt `TimeLimitMinutes` trên Deck; countdown timer tự nộp bài; Leaderboard theo deck; Thống kê nội dung Mentor | Kiểm tra leaderboard và mentor stats trên trình duyệt | ALTER TABLE thêm `TimeLimitMinutes INT NOT NULL DEFAULT 0` cho Decks |
+| 2026-06-24 | locphan8541 | Phase 10 (tiếp): Báo cáo câu hỏi sai (bảng `QuestionReports`, nút báo cáo trên Result, trang quản lý cho Mentor/Admin); ghi log `LoginAttempts` vào DB; trang Admin xem lịch sử đăng nhập; pull flashcard 3D flip từ teammate | Cập nhật TASK_PROGRESS.md và push lên branch mới | Build thành công 0 warning 0 error; app chạy tại http://localhost:5039 |

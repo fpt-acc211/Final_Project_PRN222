@@ -13,6 +13,13 @@
         <span id="answeredBadge" class="badge bg-primary" style="font-size:.82rem;padding:.35rem .7rem;flex-shrink:0;">
             0 / @Model.Questions.Count đã trả lời
         </span>
+        @if (Model.TimeLimitSeconds > 0)
+        {
+            <span id="quizTimer" class="badge bg-warning text-dark"
+                  style="font-size:.9rem;padding:.35rem .8rem;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:4.5rem;text-align:center;">
+                --:--
+            </span>
+        }
     </div>
 </div>
 
@@ -115,6 +122,38 @@
                 : 'Bạn có chắc muốn nộp bài?';
             if (confirm(msg)) document.getElementById('quizForm').submit();
         }
+
+        // ── Timer ──────────────────────────────────────────────
+        var timeLimitSeconds = @Model.TimeLimitSeconds;
+        if (timeLimitSeconds > 0) {
+            var remaining = timeLimitSeconds;
+            var timerEl = document.getElementById('quizTimer');
+
+            function formatTime(s) {
+                var m = Math.floor(s / 60);
+                var sec = s % 60;
+                return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+            }
+
+            function tickTimer() {
+                timerEl.textContent = formatTime(remaining);
+                if (remaining <= 60) {
+                    timerEl.classList.remove('bg-warning', 'text-dark');
+                    timerEl.classList.add('bg-danger', 'text-white');
+                }
+                if (remaining <= 0) {
+                    timerEl.textContent = '00:00';
+                    alert('Hết thời gian! Bài làm sẽ được nộp tự động.');
+                    document.getElementById('quizForm').submit();
+                    return;
+                }
+                remaining--;
+                setTimeout(tickTimer, 1000);
+            }
+
+            tickTimer();
+        }
+        // ───────────────────────────────────────────────────────
 
         updateProgress();
     </script>

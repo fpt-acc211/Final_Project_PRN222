@@ -11,10 +11,12 @@ namespace QuizManagement.Controllers
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
+        private readonly ILoginAttemptLogService _loginAttemptLogService;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IAdminService adminService, ILoginAttemptLogService loginAttemptLogService)
         {
             _adminService = adminService;
+            _loginAttemptLogService = loginAttemptLogService;
         }
 
         // GET /Admin — Dashboard tổng quan
@@ -144,6 +146,15 @@ namespace QuizManagement.Controllers
             var action = user.IsDisabled ? "vô hiệu hóa" : "kích hoạt";
             TempData["SuccessMessage"] = $"Đã {action} tài khoản {user.Username}.";
             return RedirectToAction(nameof(UserDetail), new { id });
+        }
+
+        // GET /Admin/LoginAttempts
+        public IActionResult LoginAttempts(bool? success)
+        {
+            var all = _loginAttemptLogService.GetRecent(300);
+            var filtered = success.HasValue ? all.Where(a => a.IsSuccess == success.Value).ToList() : all;
+            ViewBag.SuccessFilter = success;
+            return View(filtered);
         }
 
         private string CurrentUserId()

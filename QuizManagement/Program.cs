@@ -29,6 +29,8 @@ builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IQuestionReportRepository, QuestionReportRepository>();
+builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
 
 // 3. Services
 builder.Services.AddScoped<ISubjectService, SubjectService>();
@@ -38,6 +40,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IQuestionImportService, QuestionImportService>();
+builder.Services.AddScoped<IQuestionReportService, QuestionReportService>();
+builder.Services.AddScoped<ILoginAttemptLogService, LoginAttemptLogService>();
 builder.Services.AddSingleton<IDeckExportService, DeckExportService>();
 
 // 4. Infrastructure (web-tier)

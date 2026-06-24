@@ -15,5 +15,7 @@ namespace Services
         List<TestHistory> GetTestHistoriesByUser(string userId);
         List<TestHistory> GetRecentTestHistories(string userId, int count);
         (int totalQuizzes, double averagePercentage, DateTime? lastQuizDate) GetQuizStatistics(string userId);
+        List<TestHistory> GetTestHistoriesByDeck(int deckId);
+        List<TestHistory> GetTestHistoriesByContentOwner(string ownerUserId, bool isAdmin);
     }
 }

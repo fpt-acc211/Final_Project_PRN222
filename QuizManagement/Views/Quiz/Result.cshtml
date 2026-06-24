@@ -93,6 +93,15 @@
                     @SafeMarkdown.ToHtml(question.Explanation)
                 </div>
             }
+            <div class="mt-3 d-flex justify-content-end">
+                <a asp-controller="QuestionReports" asp-action="Create"
+                   asp-route-questionId="@question.QuestionId"
+                   asp-route-testHistoryId="@Model.TestHistoryId"
+                   class="btn btn-sm btn-outline-secondary"
+                   style="font-size:.8rem;opacity:.7;">
+                    ⚑ Báo cáo câu hỏi
+                </a>
+            </div>
         </div>
     }
 </div>

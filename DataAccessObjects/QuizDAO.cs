@@ -96,5 +96,32 @@ namespace DataAccessObjects
             var last = histories.Max(h => h.CreatedAt);
             return (total, Math.Round(avg, 1), last);
         }
+
+        public List<TestHistory> GetTestHistoriesByDeck(QuizManagementDbContext context, int deckId)
+        {
+            return context.TestHistories
+                .Include(h => h.User)
+                .Include(h => h.Deck)
+                    .ThenInclude(d => d.Subject)
+                .Where(h => h.DeckId == deckId)
+                .OrderByDescending(h => h.Percentage)
+                .ThenByDescending(h => h.CreatedAt)
+                .ToList();
+        }
+
+        public List<TestHistory> GetTestHistoriesByContentOwner(
+            QuizManagementDbContext context, string ownerUserId, bool isAdmin)
+        {
+            var query = context.TestHistories
+                .Include(h => h.User)
+                .Include(h => h.Deck)
+                    .ThenInclude(d => d.Subject)
+                .AsQueryable();
+
+            if (!isAdmin)
+                query = query.Where(h => h.Deck.Subject.UserId == ownerUserId);
+
+            return query.OrderByDescending(h => h.CreatedAt).ToList();
+        }
     }
 }
