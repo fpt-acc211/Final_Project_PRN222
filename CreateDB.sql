@@ -38,6 +38,7 @@ CREATE TABLE Decks (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     SubjectId INT NOT NULL,
     Name NVARCHAR(255) NOT NULL,
+    TimeLimitMinutes INT NOT NULL DEFAULT 0, -- 0 = không giới hạn; > 0 = số phút; do Mentor đặt
     IsDeleted BIT NOT NULL DEFAULT 0,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL,
@@ -92,5 +93,31 @@ CREATE TABLE TestResultDetails (
     CONSTRAINT FK_Details_History FOREIGN KEY (TestHistoryId) REFERENCES TestHistories(Id) ON DELETE CASCADE,
     CONSTRAINT FK_Details_Question FOREIGN KEY (QuestionId) REFERENCES Questions(Id),
     CONSTRAINT FK_Details_Answer FOREIGN KEY (SelectedAnswerId) REFERENCES Answers(Id)
+);
+
+-- 8. Bảng QuestionReports
+-- Người dùng báo cáo câu hỏi sai/không rõ; Mentor/Admin xem và xử lý
+CREATE TABLE QuestionReports (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    QuestionId INT NOT NULL,
+    UserId NVARCHAR(450) NOT NULL,
+    Reason NVARCHAR(100) NOT NULL,           -- WrongAnswer | UnclearQuestion | DuplicateQuestion | Other
+    Note NVARCHAR(500) NULL,                 -- Ghi chú thêm của người báo cáo
+    IsResolved BIT NOT NULL DEFAULT 0,       -- Mentor/Admin đánh dấu đã xử lý
+    CreatedAt DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_QuestionReports_Questions FOREIGN KEY (QuestionId) REFERENCES Questions(Id),
+    CONSTRAINT FK_QuestionReports_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+-- 9. Bảng LoginAttempts
+-- Ghi lại mọi lần đăng nhập (thành công và thất bại) để Admin theo dõi
+CREATE TABLE LoginAttempts (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Email NVARCHAR(256) NOT NULL,
+    IpAddress NVARCHAR(50) NOT NULL,
+    IsSuccess BIT NOT NULL,
+    UserId NVARCHAR(450) NULL,               -- NULL nếu email không tồn tại
+    CreatedAt DATETIME NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_LoginAttempts_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
 GO
