@@ -25,6 +25,7 @@ public class QuestionReportDAO
     public List<QuestionReport> GetAll(QuizManagementDbContext context)
     {
         return context.QuestionReports
+            .IgnoreQueryFilters()
             .Include(r => r.User)
             .Include(r => r.Question.Deck.Subject)
             .AsNoTracking()
@@ -37,6 +38,7 @@ public class QuestionReportDAO
     public List<QuestionReport> GetByContentOwner(QuizManagementDbContext context, string ownerUserId)
     {
         return context.QuestionReports
+            .IgnoreQueryFilters()
             .Include(r => r.User)
             .Include(r => r.Question.Deck.Subject)
             .Where(r => r.Question.Deck.Subject.UserId == ownerUserId)
@@ -49,9 +51,21 @@ public class QuestionReportDAO
     public QuestionReport? GetById(QuizManagementDbContext context, int id)
         => context.QuestionReports.Find(id);
 
+    public QuestionReport? GetByIdWithDetails(QuizManagementDbContext context, int id)
+    {
+        return context.QuestionReports
+            .IgnoreQueryFilters()
+            .Include(r => r.User)
+            .Include(r => r.Question.Deck.Subject)
+            .AsNoTracking()
+            .FirstOrDefault(r => r.Id == id);
+    }
+
     public void Resolve(QuizManagementDbContext context, int id)
     {
-        var report = context.QuestionReports.Find(id);
+        var report = context.QuestionReports
+            .IgnoreQueryFilters()
+            .FirstOrDefault(r => r.Id == id);
         if (report is null) return;
         report.IsResolved = true;
         context.SaveChanges();

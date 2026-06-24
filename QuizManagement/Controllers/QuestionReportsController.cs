@@ -10,6 +10,14 @@ namespace QuizManagement.Controllers
     [Authorize(Policy = "StudyContent")]
     public class QuestionReportsController : Controller
     {
+        private static readonly HashSet<string> AllowedReportReasons = new(StringComparer.Ordinal)
+        {
+            "WrongAnswer",
+            "UnclearQuestion",
+            "DuplicateQuestion",
+            "Other"
+        };
+
         private readonly IQuestionReportService _reportService;
         private readonly IQuestionService _questionService;
 
@@ -37,16 +45,30 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(SubmitReportViewModel model)
         {
+            var currentUserId = CurrentUserId();
+            var question = _questionService.GetQuestionById(model.QuestionId, currentUserId, allowAll: true);
+            if (question is null) return NotFound();
+
+            model.QuestionContent = question.Content;
+
+            if (!AllowedReportReasons.Contains(model.Reason))
+            {
+                ModelState.AddModelError(nameof(model.Reason), "Lý do báo cáo không hợp lệ.");
+            }
+
             if (!ModelState.IsValid) return View(model);
 
-            _reportService.Submit(model.QuestionId, CurrentUserId(), model.Reason, model.Note);
+            if (_reportService.HasPendingReport(model.QuestionId, currentUserId))
+            {
+                TempData["SuccessMessage"] = "Bạn đã gửi báo cáo cho câu hỏi này và đang chờ xử lý.";
+                return RedirectAfterSubmit(model);
+            }
+
+            _reportService.Submit(model.QuestionId, currentUserId, model.Reason, model.Note);
 
             TempData["SuccessMessage"] = "Đã gửi báo cáo. Cảm ơn bạn đã đóng góp!";
 
-            if (model.TestHistoryId.HasValue)
-                return RedirectToAction("Result", "Quiz", new { id = model.TestHistoryId.Value });
-
-            return RedirectToAction("Index", "Subjects");
+            return RedirectAfterSubmit(model);
         }
 
         // GET /QuestionReports — for Mentor/Admin
@@ -81,9 +103,26 @@ namespace QuizManagement.Controllers
         [Authorize(Policy = "ManageContent")]
         public IActionResult Resolve(int id)
         {
+            var report = _reportService.GetReportById(id);
+            if (report is null) return NotFound();
+
+            if (!User.IsInRole(AppRoles.Admin)
+                && report.Question?.Deck?.Subject?.UserId != CurrentUserId())
+            {
+                return Forbid();
+            }
+
             _reportService.Resolve(id);
             TempData["SuccessMessage"] = "Đã đánh dấu báo cáo là đã xử lý.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private IActionResult RedirectAfterSubmit(SubmitReportViewModel model)
+        {
+            if (model.TestHistoryId.HasValue)
+                return RedirectToAction("Result", "Quiz", new { id = model.TestHistoryId.Value });
+
+            return RedirectToAction("Index", "Subjects");
         }
 
         private string CurrentUserId()

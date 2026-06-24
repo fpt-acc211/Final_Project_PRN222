@@ -16,6 +16,7 @@ public class QuestionReportRepository : IQuestionReportRepository
     public List<QuestionReport> GetAll() => QuestionReportDAO.Instance.GetAll(_context);
     public List<QuestionReport> GetByContentOwner(string ownerUserId) => QuestionReportDAO.Instance.GetByContentOwner(_context, ownerUserId);
     public QuestionReport? GetById(int id) => QuestionReportDAO.Instance.GetById(_context, id);
+    public QuestionReport? GetByIdWithDetails(int id) => QuestionReportDAO.Instance.GetByIdWithDetails(_context, id);
     public void Resolve(int id) => QuestionReportDAO.Instance.Resolve(_context, id);
     public bool HasPendingReport(int questionId, string userId) => QuestionReportDAO.Instance.HasPendingReport(_context, questionId, userId);
 }

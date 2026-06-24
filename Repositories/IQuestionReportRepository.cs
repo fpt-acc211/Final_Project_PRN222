@@ -8,6 +8,7 @@ public interface IQuestionReportRepository
     List<QuestionReport> GetAll();
     List<QuestionReport> GetByContentOwner(string ownerUserId);
     QuestionReport? GetById(int id);
+    QuestionReport? GetByIdWithDetails(int id);
     void Resolve(int id);
     bool HasPendingReport(int questionId, string userId);
 }

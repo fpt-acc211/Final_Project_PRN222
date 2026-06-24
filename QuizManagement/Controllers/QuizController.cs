@@ -13,6 +13,7 @@ namespace QuizManagement.Controllers
     public class QuizController : Controller
     {
         private static readonly TimeSpan QuizAttemptLifetime = TimeSpan.FromHours(8);
+        private static readonly TimeSpan QuizSubmitGracePeriod = TimeSpan.FromSeconds(30);
 
         private readonly IDeckService _deckService;
         private readonly IQuizService _quizService;
@@ -83,14 +84,19 @@ namespace QuizManagement.Controllers
 
             var questions = _quizService.GetQuestionsForQuiz(config.DeckId, config.QuestionCount);
             var questionIds = questions.Select(q => q.Id).ToList();
+            var timeLimitSeconds = deck.TimeLimitMinutes > 0 ? deck.TimeLimitMinutes * 60 : 0;
+            var issuedAtUtc = DateTimeOffset.UtcNow;
+            var expiresAtUtc = timeLimitSeconds > 0
+                ? issuedAtUtc.AddSeconds(timeLimitSeconds)
+                : (DateTimeOffset?)null;
 
             var model = new QuizTakeViewModel
             {
                 DeckId = config.DeckId,
                 DeckName = deck.Name,
                 SubjectName = deck.Subject.Name,
-                AttemptToken = ProtectQuizAttempt(config.DeckId, CurrentUserId(), questionIds),
-                TimeLimitSeconds = deck.TimeLimitMinutes > 0 ? deck.TimeLimitMinutes * 60 : 0,
+                AttemptToken = ProtectQuizAttempt(config.DeckId, CurrentUserId(), questionIds, issuedAtUtc, expiresAtUtc),
+                TimeLimitSeconds = timeLimitSeconds,
                 Questions = questions.Select(q => new QuizQuestionViewModel
                 {
                     QuestionId = q.Id,
@@ -201,14 +207,20 @@ namespace QuizManagement.Controllers
             };
         }
 
-        private string ProtectQuizAttempt(int deckId, string userId, List<int> questionIds)
+        private string ProtectQuizAttempt(
+            int deckId,
+            string userId,
+            List<int> questionIds,
+            DateTimeOffset issuedAtUtc,
+            DateTimeOffset? expiresAtUtc)
         {
             var payload = new QuizAttemptPayload
             {
                 DeckId = deckId,
                 UserId = userId,
                 QuestionIds = questionIds,
-                IssuedAtUtc = DateTimeOffset.UtcNow
+                IssuedAtUtc = issuedAtUtc,
+                ExpiresAtUtc = expiresAtUtc
             };
 
             return _quizAttemptProtector.Protect(JsonSerializer.Serialize(payload));
@@ -234,11 +246,15 @@ namespace QuizManagement.Controllers
 
         private static bool IsValidQuizAttempt(QuizAttemptPayload attempt, int deckId, string userId)
         {
+            var now = DateTimeOffset.UtcNow;
+
             return attempt.DeckId == deckId
                 && attempt.UserId == userId
                 && attempt.QuestionIds.Count > 0
                 && attempt.QuestionIds.Count <= 500
-                && DateTimeOffset.UtcNow - attempt.IssuedAtUtc <= QuizAttemptLifetime;
+                && now - attempt.IssuedAtUtc <= QuizAttemptLifetime
+                && (!attempt.ExpiresAtUtc.HasValue
+                    || now <= attempt.ExpiresAtUtc.Value.Add(QuizSubmitGracePeriod));
         }
 
         private static IEnumerable<int> GetSelectedAnswerIds(QuizQuestionSubmitItem question)
@@ -269,6 +285,8 @@ namespace QuizManagement.Controllers
             public List<int> QuestionIds { get; set; } = new();
 
             public DateTimeOffset IssuedAtUtc { get; set; }
+
+            public DateTimeOffset? ExpiresAtUtc { get; set; }
         }
     }
 }

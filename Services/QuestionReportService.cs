@@ -28,6 +28,7 @@ public class QuestionReportService : IQuestionReportService
 
     public List<QuestionReport> GetAllReports() => _repository.GetAll();
     public List<QuestionReport> GetReportsByContentOwner(string ownerUserId) => _repository.GetByContentOwner(ownerUserId);
+    public QuestionReport? GetReportById(int reportId) => _repository.GetByIdWithDetails(reportId);
     public void Resolve(int reportId) => _repository.Resolve(reportId);
     public bool HasPendingReport(int questionId, string userId) => _repository.HasPendingReport(questionId, userId);
 }
