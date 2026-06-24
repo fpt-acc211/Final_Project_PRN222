@@ -30,6 +30,10 @@ public partial class QuizManagementDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<QuestionReport> QuestionReports { get; set; }
+
+    public virtual DbSet<LoginAttempt> LoginAttempts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Answer>(entity =>
@@ -51,6 +55,7 @@ public partial class QuizManagementDbContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(256);
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(256);
+            entity.Property(e => e.TimeLimitMinutes).HasDefaultValue(0);
 
             entity.HasOne(d => d.Subject).WithMany(p => p.Decks)
                 .HasForeignKey(d => d.SubjectId)
@@ -141,6 +146,40 @@ public partial class QuizManagementDbContext : DbContext
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
             entity.Property(e => e.SecurityStamp).HasMaxLength(450);
             entity.Property(e => e.IsDisabled).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<QuestionReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).HasMaxLength(100);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
+            entity.Property(e => e.IsResolved).HasDefaultValue(false);
+
+            entity.HasOne(e => e.Question).WithMany()
+                .HasForeignKey(e => e.QuestionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_QuestionReports_Questions");
+
+            entity.HasOne(e => e.User).WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_QuestionReports_Users");
+        });
+
+        modelBuilder.Entity<LoginAttempt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).HasMaxLength(256);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
+
+            entity.HasOne(e => e.User).WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_LoginAttempts_Users");
         });
 
         OnModelCreatingPartial(modelBuilder);

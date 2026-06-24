@@ -15,12 +15,17 @@ namespace QuizManagement.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILoginAttemptService _loginAttemptService;
+        private readonly ILoginAttemptLogService _loginAttemptLogService;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
-        public AccountController(IUserService userService, ILoginAttemptService loginAttemptService)
+        public AccountController(
+            IUserService userService,
+            ILoginAttemptService loginAttemptService,
+            ILoginAttemptLogService loginAttemptLogService)
         {
             _userService = userService;
             _loginAttemptService = loginAttemptService;
+            _loginAttemptLogService = loginAttemptLogService;
         }
 
         [HttpGet]
@@ -107,6 +112,7 @@ namespace QuizManagement.Controllers
             if (user?.PasswordHash is null)
             {
                 _loginAttemptService.RecordFailedAttempt(model.Email, ipAddress);
+                _loginAttemptLogService.Log(model.Email, ipAddress, false);
                 ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
                 return View(model);
             }
@@ -115,18 +121,21 @@ namespace QuizManagement.Controllers
             if (verificationResult == PasswordVerificationResult.Failed)
             {
                 _loginAttemptService.RecordFailedAttempt(model.Email, ipAddress);
+                _loginAttemptLogService.Log(model.Email, ipAddress, false, user.Id);
                 ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
                 return View(model);
             }
 
             if (user.IsDisabled)
             {
+                _loginAttemptLogService.Log(model.Email, ipAddress, false, user.Id);
                 ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
                 return View(model);
             }
 
             // Login success — clear failed attempts
             _loginAttemptService.ClearAttempts(model.Email, ipAddress);
+            _loginAttemptLogService.Log(model.Email, ipAddress, true, user.Id);
 
             // Ensure SecurityStamp exists for new users migrated from old schema
             if (string.IsNullOrEmpty(user.SecurityStamp))

@@ -32,5 +32,11 @@ namespace Repositories
 
         public (int totalQuizzes, double averagePercentage, DateTime? lastQuizDate) GetQuizStatistics(string userId)
             => QuizDAO.Instance.GetQuizStatistics(_context, userId);
+
+        public List<TestHistory> GetTestHistoriesByDeck(int deckId)
+            => QuizDAO.Instance.GetTestHistoriesByDeck(_context, deckId);
+
+        public List<TestHistory> GetTestHistoriesByContentOwner(string ownerUserId, bool isAdmin)
+            => QuizDAO.Instance.GetTestHistoriesByContentOwner(_context, ownerUserId, isAdmin);
     }
 }

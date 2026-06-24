@@ -77,6 +77,7 @@ namespace QuizManagement.Controllers
             {
                 SubjectId = model.SubjectId,
                 Name = model.Name,
+                TimeLimitMinutes = model.TimeLimitMinutes,
                 CreatedBy = User.Identity?.Name
             });
 
@@ -98,7 +99,8 @@ namespace QuizManagement.Controllers
                 Id = deck.Id,
                 SubjectId = deck.SubjectId,
                 SubjectName = deck.Subject.Name,
-                Name = deck.Name
+                Name = deck.Name,
+                TimeLimitMinutes = deck.TimeLimitMinutes
             });
         }
 
@@ -134,6 +136,7 @@ namespace QuizManagement.Controllers
             }
 
             deck.Name = model.Name;
+            deck.TimeLimitMinutes = model.TimeLimitMinutes;
             deck.UpdatedBy = User.Identity?.Name;
             _deckService.UpdateDeck(deck);
 

@@ -8,7 +8,10 @@
         <h1 class="h3 mb-1">Admin Dashboard</h1>
         <p style="color:var(--text-muted);margin:0;">Quản trị hệ thống Quiz Management</p>
     </div>
-    <a asp-action="Users" class="btn btn-outline-secondary">Quản lý người dùng</a>
+    <div class="d-flex gap-2">
+        <a asp-action="LoginAttempts" class="btn btn-outline-secondary">Lịch sử đăng nhập</a>
+        <a asp-action="Users" class="btn btn-outline-secondary">Quản lý người dùng</a>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] is string success)
