@@ -61,9 +61,25 @@ else
         </div>
 
         <div class="flashcard-actions">
-            <button type="button" id="againButton" class="btn btn-outline-danger d-none">Cần học lại</button>
-            <button type="button" id="knownButton" class="btn btn-outline-success d-none">Đã nhớ</button>
+            <button type="button" id="againButton" class="btn btn-outline-danger d-none">
+                <span class="fc-key-badge">R</span> Cần học lại
+            </button>
+            <button type="button" id="knownButton" class="btn btn-outline-success d-none">
+                <span class="fc-key-badge">Enter</span> Đã nhớ
+            </button>
             <button type="button" id="shuffleButton" class="btn btn-outline-secondary">Trộn thẻ</button>
+        </div>
+
+        <div class="fc-shortcut-guide">
+            <div class="fc-shortcut-title">Phím tắt</div>
+            <div class="fc-shortcut-grid">
+                <div class="fc-shortcut-item"><kbd>Space</kbd><span>Lật thẻ</span></div>
+                <div class="fc-shortcut-item"><kbd>←</kbd><span>Thẻ trước</span></div>
+                <div class="fc-shortcut-item"><kbd>→</kbd><span>Thẻ tiếp</span></div>
+                <div class="fc-shortcut-item"><kbd>↑</kbd> <kbd>↓</kbd><span>Lật thẻ</span></div>
+                <div class="fc-shortcut-item"><kbd>Enter</kbd><span>Đã nhớ</span></div>
+                <div class="fc-shortcut-item"><kbd>R</kbd><span>Cần học lại</span></div>
+            </div>
         </div>
     </div>
 
@@ -72,8 +88,9 @@ else
             const cards = @Html.Raw(json);
             let currentIndex = 0;
             let flipped = false;
-            let knownCount = 0;
-            let againCount = 0;
+
+            // Per-card status: 'unseen' | 'known' | 'again'
+            const cardStatus = new Map();
 
             const cardInner = document.getElementById('flashcardInner');
             const questionTextFront = document.getElementById('questionTextFront');
@@ -90,6 +107,15 @@ else
             const studyCounter = document.getElementById('studyCounter');
 
             const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+            function getCounts() {
+                let known = 0, again = 0;
+                for (const status of cardStatus.values()) {
+                    if (status === 'known') known++;
+                    else if (status === 'again') again++;
+                }
+                return { known, again };
+            }
 
             function renderCard() {
                 const card = cards[currentIndex];
@@ -131,8 +157,13 @@ else
                 // Buttons
                 againButton.classList.add('d-none');
                 knownButton.classList.add('d-none');
+                updateCounters();
+            }
+
+            function updateCounters() {
+                const { known, again } = getCounts();
                 cardCounter.textContent = `Thẻ ${currentIndex + 1}/${cards.length}`;
-                studyCounter.textContent = `${knownCount} đã nhớ · ${againCount} cần học lại`;
+                studyCounter.textContent = `${known} đã nhớ · ${again} cần học lại`;
             }
 
             function flipCard() {
@@ -154,11 +185,8 @@ else
             }
 
             function markAndMove(isKnown) {
-                if (isKnown) {
-                    knownCount++;
-                } else {
-                    againCount++;
-                }
+                const cardId = cards[currentIndex].QuestionId;
+                cardStatus.set(cardId, isKnown ? 'known' : 'again');
                 move(1);
             }
 
@@ -180,7 +208,7 @@ else
             // Event listeners
             cardInner.addEventListener('click', flipCard);
             document.addEventListener('keydown', event => {
-                if (event.key === ' ' || event.key === 'Enter') {
+                if (event.key === ' ') {
                     event.preventDefault();
                     flipCard();
                 }
@@ -194,11 +222,16 @@ else
                     event.preventDefault();
                     flipCard();
                 }
-                if (flipped && event.key === '1') {
-                    markAndMove(false);
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (flipped) {
+                        markAndMove(true);
+                    } else {
+                        flipCard();
+                    }
                 }
-                if (flipped && event.key === '2') {
-                    markAndMove(true);
+                if (flipped && (event.key === 'r' || event.key === 'R')) {
+                    markAndMove(false);
                 }
             });
             prevCardButton.addEventListener('click', () => move(-1));
