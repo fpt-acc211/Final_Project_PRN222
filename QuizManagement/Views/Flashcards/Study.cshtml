@@ -88,10 +88,12 @@ else
             const cards = @Html.Raw(json);
             let currentIndex = 0;
             let flipped = false;
+            let isAnimating = false;
 
             // Per-card status: 'unseen' | 'known' | 'again'
             const cardStatus = new Map();
 
+            const fcScene = document.querySelector('.fc-scene');
             const cardInner = document.getElementById('flashcardInner');
             const questionTextFront = document.getElementById('questionTextFront');
             const cardTypeFront = document.getElementById('cardTypeFront');
@@ -167,6 +169,7 @@ else
             }
 
             function flipCard() {
+                if (isAnimating) return;
                 flipped = !flipped;
                 cardInner.classList.toggle('fc-card--flipped', flipped);
 
@@ -180,17 +183,54 @@ else
             }
 
             function move(delta) {
+                if (isAnimating) return;
                 currentIndex = (currentIndex + delta + cards.length) % cards.length;
                 renderCard();
             }
 
             function markAndMove(isKnown) {
+                if (isAnimating) return;
+                isAnimating = true;
+
                 const cardId = cards[currentIndex].QuestionId;
                 cardStatus.set(cardId, isKnown ? 'known' : 'again');
-                move(1);
+
+                // Slide card out (known goes right, again goes left)
+                if (isKnown) {
+                    fcScene.classList.add('fc-swipe-right');
+                } else {
+                    fcScene.classList.add('fc-swipe-left');
+                }
+
+                setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % cards.length;
+
+                    // Instantly place on opposite side without transition
+                    fcScene.classList.add('no-transition');
+                    fcScene.classList.remove('fc-swipe-right', 'fc-swipe-left');
+
+                    if (isKnown) {
+                        fcScene.classList.add('fc-swipe-enter-left');
+                    } else {
+                        fcScene.classList.add('fc-swipe-enter-right');
+                    }
+
+                    renderCard();
+
+                    // Force layout reflow
+                    fcScene.offsetHeight;
+
+                    // Animate back to center
+                    fcScene.classList.remove('no-transition', 'fc-swipe-enter-left', 'fc-swipe-enter-right');
+
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 250);
+                }, 250);
             }
 
             function shuffleCards() {
+                if (isAnimating) return;
                 for (let i = cards.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [cards[i], cards[j]] = [cards[j], cards[i]];
