@@ -37,7 +37,10 @@ else
             <div id="flashcardInner" class="fc-card">
                 <!-- FRONT: Question + Answer Options -->
                 <div class="fc-face fc-face--front">
-                    <div class="flashcard-side-label" id="cardTypeFront"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flashcard-side-label mb-0" id="cardTypeFront"></div>
+                        <span id="cardStatusBadgeFront" class="badge d-none"></span>
+                    </div>
                     <div class="flashcard-question" id="questionTextFront"></div>
                     <div class="fc-options" id="optionsPanel"></div>
                     <div class="fc-hint">
@@ -47,7 +50,10 @@ else
                 </div>
                 <!-- BACK: Correct Answer + Explanation -->
                 <div class="fc-face fc-face--back">
-                    <div class="flashcard-side-label">Đáp án</div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flashcard-side-label mb-0">Đáp án</div>
+                        <span id="cardStatusBadgeBack" class="badge d-none"></span>
+                    </div>
                     <div class="fc-back-content">
                         <div id="backAnswerList" class="fc-back-answers"></div>
                         <div id="backExplanation" class="fc-back-explanation"></div>
@@ -156,6 +162,32 @@ else
                     backExplanation.classList.add('d-none');
                 }
 
+                // Status Badges
+                const status = cardStatus.get(card.QuestionId);
+                const badgeFront = document.getElementById('cardStatusBadgeFront');
+                const badgeBack = document.getElementById('cardStatusBadgeBack');
+
+                if (status === 'known') {
+                    badgeFront.textContent = 'Đã nhớ';
+                    badgeFront.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badgeFront.classList.remove('d-none');
+
+                    badgeBack.textContent = 'Đã nhớ';
+                    badgeBack.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badgeBack.classList.remove('d-none');
+                } else if (status === 'again') {
+                    badgeFront.textContent = 'Cần học lại';
+                    badgeFront.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    badgeFront.classList.remove('d-none');
+
+                    badgeBack.textContent = 'Cần học lại';
+                    badgeBack.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    badgeBack.classList.remove('d-none');
+                } else {
+                    badgeFront.classList.add('d-none');
+                    badgeBack.classList.add('d-none');
+                }
+
                 // Buttons
                 againButton.classList.add('d-none');
                 knownButton.classList.add('d-none');
@@ -176,6 +208,19 @@ else
                 if (flipped) {
                     againButton.classList.remove('d-none');
                     knownButton.classList.remove('d-none');
+
+                    // Highlight based on current status
+                    const card = cards[currentIndex];
+                    const status = cardStatus.get(card.QuestionId);
+
+                    againButton.className = 'btn btn-outline-danger';
+                    knownButton.className = 'btn btn-outline-success';
+
+                    if (status === 'known') {
+                        knownButton.className = 'btn btn-success';
+                    } else if (status === 'again') {
+                        againButton.className = 'btn btn-danger';
+                    }
                 } else {
                     againButton.classList.add('d-none');
                     knownButton.classList.add('d-none');
@@ -194,6 +239,9 @@ else
 
                 const cardId = cards[currentIndex].QuestionId;
                 cardStatus.set(cardId, isKnown ? 'known' : 'again');
+
+                // Update counters immediately for instant visual feedback
+                updateCounters();
 
                 // Slide card out (known goes right, again goes left)
                 if (isKnown) {

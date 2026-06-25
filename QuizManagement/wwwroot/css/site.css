@@ -956,6 +956,16 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 .fc-scene.no-transition {
   transition: none !important;
 }
+.fc-scene.fc-swipe-right .fc-face {
+  background-color: rgba(25, 135, 84, 0.15) !important;
+  border-color: var(--success) !important;
+  box-shadow: 0 0 20px rgba(25, 135, 84, 0.4);
+}
+.fc-scene.fc-swipe-left .fc-face {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 20px rgba(220, 53, 69, 0.4);
+}
 .fc-card {
   position: relative;
   width: 100%;
