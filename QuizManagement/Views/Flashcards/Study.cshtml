@@ -37,6 +37,8 @@ else
             <div id="flashcardInner" class="fc-card">
                 <!-- FRONT: Question + Answer Options -->
                 <div class="fc-face fc-face--front">
+                    <div class="fc-stamp-overlay fc-stamp-overlay--known d-none">ĐÃ NHỚ</div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--again d-none">CẦN HỌC LẠI</div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="flashcard-side-label mb-0" id="cardTypeFront"></div>
                         <span id="cardStatusBadgeFront" class="badge d-none"></span>
@@ -50,6 +52,8 @@ else
                 </div>
                 <!-- BACK: Correct Answer + Explanation -->
                 <div class="fc-face fc-face--back">
+                    <div class="fc-stamp-overlay fc-stamp-overlay--known d-none">ĐÃ NHỚ</div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--again d-none">CẦN HỌC LẠI</div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="flashcard-side-label mb-0">Đáp án</div>
                         <span id="cardStatusBadgeBack" class="badge d-none"></span>
@@ -129,6 +133,12 @@ else
                 const card = cards[currentIndex];
                 flipped = false;
                 cardInner.classList.remove('fc-card--flipped');
+
+                // Reset stamp overlays
+                cardInner.querySelectorAll('.fc-stamp-overlay').forEach(s => {
+                    s.classList.add('d-none');
+                    s.classList.remove('show');
+                });
 
                 // Front side
                 questionTextFront.textContent = card.Content || '';
@@ -243,38 +253,54 @@ else
                 // Update counters immediately for instant visual feedback
                 updateCounters();
 
-                // Slide card out (known goes right, again goes left)
-                if (isKnown) {
-                    fcScene.classList.add('fc-swipe-right');
-                } else {
-                    fcScene.classList.add('fc-swipe-left');
+                // Show stamp on the currently active face (front or back)
+                const activeFace = flipped 
+                    ? cardInner.querySelector('.fc-face--back') 
+                    : cardInner.querySelector('.fc-face--front');
+                const stamp = activeFace.querySelector(isKnown ? '.fc-stamp-overlay--known' : '.fc-stamp-overlay--again');
+                
+                if (stamp) {
+                    stamp.classList.remove('d-none');
+                    // Force reflow
+                    stamp.offsetHeight;
+                    stamp.classList.add('show');
                 }
 
+                // Wait 400ms to show the stamp before animating the swipe out
                 setTimeout(() => {
-                    currentIndex = (currentIndex + 1) % cards.length;
-
-                    // Instantly place on opposite side without transition
-                    fcScene.classList.add('no-transition');
-                    fcScene.classList.remove('fc-swipe-right', 'fc-swipe-left');
-
+                    // Slide card out (known goes right, again goes left)
                     if (isKnown) {
-                        fcScene.classList.add('fc-swipe-enter-left');
+                        fcScene.classList.add('fc-swipe-right');
                     } else {
-                        fcScene.classList.add('fc-swipe-enter-right');
+                        fcScene.classList.add('fc-swipe-left');
                     }
 
-                    renderCard();
-
-                    // Force layout reflow
-                    fcScene.offsetHeight;
-
-                    // Animate back to center
-                    fcScene.classList.remove('no-transition', 'fc-swipe-enter-left', 'fc-swipe-enter-right');
-
                     setTimeout(() => {
-                        isAnimating = false;
+                        currentIndex = (currentIndex + 1) % cards.length;
+
+                        // Instantly place on opposite side without transition
+                        fcScene.classList.add('no-transition');
+                        fcScene.classList.remove('fc-swipe-right', 'fc-swipe-left');
+
+                        if (isKnown) {
+                            fcScene.classList.add('fc-swipe-enter-left');
+                        } else {
+                            fcScene.classList.add('fc-swipe-enter-right');
+                        }
+
+                        renderCard();
+
+                        // Force layout reflow
+                        fcScene.offsetHeight;
+
+                        // Animate back to center
+                        fcScene.classList.remove('no-transition', 'fc-swipe-enter-left', 'fc-swipe-enter-right');
+
+                        setTimeout(() => {
+                            isAnimating = false;
+                        }, 250);
                     }, 250);
-                }, 250);
+                }, 400);
             }
 
             function shuffleCards() {
