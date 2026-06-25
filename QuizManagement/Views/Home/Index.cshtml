@@ -34,7 +34,7 @@
     <div class="col-sm-4">
         <div class="stat-card stat-card--green">
             <div class="stat-card__label">Lần làm gần nhất</div>
-            <div class="stat-card__value" style="font-size:1.1rem;">
+            <div class="stat-card__value">
                 @if (Model.LastQuizDate.HasValue)
                 {
                     @Model.LastQuizDate.Value.ToLocalTime().ToString("dd/MM HH:mm")
