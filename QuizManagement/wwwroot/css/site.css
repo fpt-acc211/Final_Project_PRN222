@@ -286,6 +286,7 @@ h1,h2,h3,h4,h5,h6 { color: var(--text); font-weight: 600; line-height: 1.3; }
   padding: 1.35rem;
   position: relative;
   overflow: hidden;
+  height: 100%;
   transition: transform var(--t), box-shadow var(--t), border-color var(--t);
 }
 .stat-card::after {
