@@ -37,7 +37,12 @@ else
             <div id="flashcardInner" class="fc-card">
                 <!-- FRONT: Question + Answer Options -->
                 <div class="fc-face fc-face--front">
-                    <div class="flashcard-side-label" id="cardTypeFront"></div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--known d-none">ĐÃ NHỚ</div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--again d-none">CẦN HỌC LẠI</div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flashcard-side-label mb-0" id="cardTypeFront"></div>
+                        <span id="cardStatusBadgeFront" class="badge d-none"></span>
+                    </div>
                     <div class="flashcard-question" id="questionTextFront"></div>
                     <div class="fc-options" id="optionsPanel"></div>
                     <div class="fc-hint">
@@ -47,7 +52,12 @@ else
                 </div>
                 <!-- BACK: Correct Answer + Explanation -->
                 <div class="fc-face fc-face--back">
-                    <div class="flashcard-side-label">Đáp án</div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--known d-none">ĐÃ NHỚ</div>
+                    <div class="fc-stamp-overlay fc-stamp-overlay--again d-none">CẦN HỌC LẠI</div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="flashcard-side-label mb-0">Đáp án</div>
+                        <span id="cardStatusBadgeBack" class="badge d-none"></span>
+                    </div>
                     <div class="fc-back-content">
                         <div id="backAnswerList" class="fc-back-answers"></div>
                         <div id="backExplanation" class="fc-back-explanation"></div>
@@ -61,9 +71,25 @@ else
         </div>
 
         <div class="flashcard-actions">
-            <button type="button" id="againButton" class="btn btn-outline-danger d-none">Cần học lại</button>
-            <button type="button" id="knownButton" class="btn btn-outline-success d-none">Đã nhớ</button>
+            <button type="button" id="againButton" class="btn btn-outline-danger d-none">
+                <span class="fc-key-badge">R</span> Cần học lại
+            </button>
+            <button type="button" id="knownButton" class="btn btn-outline-success d-none">
+                <span class="fc-key-badge">Enter</span> Đã nhớ
+            </button>
             <button type="button" id="shuffleButton" class="btn btn-outline-secondary">Trộn thẻ</button>
+        </div>
+
+        <div class="fc-shortcut-guide">
+            <div class="fc-shortcut-title">Phím tắt</div>
+            <div class="fc-shortcut-grid">
+                <div class="fc-shortcut-item"><kbd>Space</kbd><span>Lật thẻ</span></div>
+                <div class="fc-shortcut-item"><kbd>←</kbd><span>Thẻ trước</span></div>
+                <div class="fc-shortcut-item"><kbd>→</kbd><span>Thẻ tiếp</span></div>
+                <div class="fc-shortcut-item"><kbd>↑</kbd> <kbd>↓</kbd><span>Lật thẻ</span></div>
+                <div class="fc-shortcut-item"><kbd>Enter</kbd><span>Đã nhớ</span></div>
+                <div class="fc-shortcut-item"><kbd>R</kbd><span>Cần học lại</span></div>
+            </div>
         </div>
     </div>
 
@@ -72,9 +98,12 @@ else
             const cards = @Html.Raw(json);
             let currentIndex = 0;
             let flipped = false;
-            let knownCount = 0;
-            let againCount = 0;
+            let isAnimating = false;
 
+            // Per-card status: 'unseen' | 'known' | 'again'
+            const cardStatus = new Map();
+
+            const fcScene = document.querySelector('.fc-scene');
             const cardInner = document.getElementById('flashcardInner');
             const questionTextFront = document.getElementById('questionTextFront');
             const cardTypeFront = document.getElementById('cardTypeFront');
@@ -91,10 +120,25 @@ else
 
             const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
+            function getCounts() {
+                let known = 0, again = 0;
+                for (const status of cardStatus.values()) {
+                    if (status === 'known') known++;
+                    else if (status === 'again') again++;
+                }
+                return { known, again };
+            }
+
             function renderCard() {
                 const card = cards[currentIndex];
                 flipped = false;
                 cardInner.classList.remove('fc-card--flipped');
+
+                // Reset stamp overlays
+                cardInner.querySelectorAll('.fc-stamp-overlay').forEach(s => {
+                    s.classList.add('d-none');
+                    s.classList.remove('show');
+                });
 
                 // Front side
                 questionTextFront.textContent = card.Content || '';
@@ -128,20 +172,65 @@ else
                     backExplanation.classList.add('d-none');
                 }
 
+                // Status Badges
+                const status = cardStatus.get(card.QuestionId);
+                const badgeFront = document.getElementById('cardStatusBadgeFront');
+                const badgeBack = document.getElementById('cardStatusBadgeBack');
+
+                if (status === 'known') {
+                    badgeFront.textContent = 'Đã nhớ';
+                    badgeFront.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badgeFront.classList.remove('d-none');
+
+                    badgeBack.textContent = 'Đã nhớ';
+                    badgeBack.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badgeBack.classList.remove('d-none');
+                } else if (status === 'again') {
+                    badgeFront.textContent = 'Cần học lại';
+                    badgeFront.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    badgeFront.classList.remove('d-none');
+
+                    badgeBack.textContent = 'Cần học lại';
+                    badgeBack.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                    badgeBack.classList.remove('d-none');
+                } else {
+                    badgeFront.classList.add('d-none');
+                    badgeBack.classList.add('d-none');
+                }
+
                 // Buttons
                 againButton.classList.add('d-none');
                 knownButton.classList.add('d-none');
+                updateCounters();
+            }
+
+            function updateCounters() {
+                const { known, again } = getCounts();
                 cardCounter.textContent = `Thẻ ${currentIndex + 1}/${cards.length}`;
-                studyCounter.textContent = `${knownCount} đã nhớ · ${againCount} cần học lại`;
+                studyCounter.textContent = `${known} đã nhớ · ${again} cần học lại`;
             }
 
             function flipCard() {
+                if (isAnimating) return;
                 flipped = !flipped;
                 cardInner.classList.toggle('fc-card--flipped', flipped);
 
                 if (flipped) {
                     againButton.classList.remove('d-none');
                     knownButton.classList.remove('d-none');
+
+                    // Highlight based on current status
+                    const card = cards[currentIndex];
+                    const status = cardStatus.get(card.QuestionId);
+
+                    againButton.className = 'btn btn-outline-danger';
+                    knownButton.className = 'btn btn-outline-success';
+
+                    if (status === 'known') {
+                        knownButton.className = 'btn btn-success';
+                    } else if (status === 'again') {
+                        againButton.className = 'btn btn-danger';
+                    }
                 } else {
                     againButton.classList.add('d-none');
                     knownButton.classList.add('d-none');
@@ -149,20 +238,73 @@ else
             }
 
             function move(delta) {
+                if (isAnimating) return;
                 currentIndex = (currentIndex + delta + cards.length) % cards.length;
                 renderCard();
             }
 
             function markAndMove(isKnown) {
-                if (isKnown) {
-                    knownCount++;
-                } else {
-                    againCount++;
+                if (isAnimating) return;
+                isAnimating = true;
+
+                const cardId = cards[currentIndex].QuestionId;
+                cardStatus.set(cardId, isKnown ? 'known' : 'again');
+
+                // Update counters immediately for instant visual feedback
+                updateCounters();
+
+                // Show stamp on the currently active face (front or back)
+                const activeFace = flipped 
+                    ? cardInner.querySelector('.fc-face--back') 
+                    : cardInner.querySelector('.fc-face--front');
+                const stamp = activeFace.querySelector(isKnown ? '.fc-stamp-overlay--known' : '.fc-stamp-overlay--again');
+                
+                if (stamp) {
+                    stamp.classList.remove('d-none');
+                    // Force reflow
+                    stamp.offsetHeight;
+                    stamp.classList.add('show');
                 }
-                move(1);
+
+                // Wait 400ms to show the stamp before animating the swipe out
+                setTimeout(() => {
+                    // Slide card out (known goes right, again goes left)
+                    if (isKnown) {
+                        fcScene.classList.add('fc-swipe-right');
+                    } else {
+                        fcScene.classList.add('fc-swipe-left');
+                    }
+
+                    setTimeout(() => {
+                        currentIndex = (currentIndex + 1) % cards.length;
+
+                        // Instantly place on opposite side without transition
+                        fcScene.classList.add('no-transition');
+                        fcScene.classList.remove('fc-swipe-right', 'fc-swipe-left');
+
+                        if (isKnown) {
+                            fcScene.classList.add('fc-swipe-enter-left');
+                        } else {
+                            fcScene.classList.add('fc-swipe-enter-right');
+                        }
+
+                        renderCard();
+
+                        // Force layout reflow
+                        fcScene.offsetHeight;
+
+                        // Animate back to center
+                        fcScene.classList.remove('no-transition', 'fc-swipe-enter-left', 'fc-swipe-enter-right');
+
+                        setTimeout(() => {
+                            isAnimating = false;
+                        }, 250);
+                    }, 250);
+                }, 400);
             }
 
             function shuffleCards() {
+                if (isAnimating) return;
                 for (let i = cards.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [cards[i], cards[j]] = [cards[j], cards[i]];
@@ -180,7 +322,7 @@ else
             // Event listeners
             cardInner.addEventListener('click', flipCard);
             document.addEventListener('keydown', event => {
-                if (event.key === ' ' || event.key === 'Enter') {
+                if (event.key === ' ') {
                     event.preventDefault();
                     flipCard();
                 }
@@ -194,11 +336,16 @@ else
                     event.preventDefault();
                     flipCard();
                 }
-                if (flipped && event.key === '1') {
-                    markAndMove(false);
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (flipped) {
+                        markAndMove(true);
+                    } else {
+                        flipCard();
+                    }
                 }
-                if (flipped && event.key === '2') {
-                    markAndMove(true);
+                if (flipped && (event.key === 'r' || event.key === 'R')) {
+                    markAndMove(false);
                 }
             });
             prevCardButton.addEventListener('click', () => move(-1));

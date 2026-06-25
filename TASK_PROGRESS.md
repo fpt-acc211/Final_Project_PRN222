@@ -1,6 +1,6 @@
-﻿# Task Progress - Quiz Management System
+# Task Progress - Quiz Management System
 
-Cập nhật gần nhất: 2026-06-24
+Cập nhật gần nhất: 2026-06-25
 
 Mục tiêu: triển khai hoàn chỉnh ứng dụng ASP.NET Core MVC cho final project PRN222, bao gồm quản lý ngân hàng câu hỏi, làm bài trắc nghiệm, chấm điểm và lưu lịch sử.
 
@@ -276,3 +276,4 @@ Một feature chỉ được tick `[x]` khi đạt đủ các điều kiện sau
 | 2026-06-23 | Naams2k10fpt | Final readiness: harden quiz submit bằng signed attempt token, thêm `SeedDemoData.sql`, chuẩn hóa config mẫu và tài liệu | Chạy lại demo flow trên browser, kiểm tra responsive, chuẩn bị slide/tag release | Build cần kiểm tra lại sau khi hoàn tất chỉnh tài liệu |
 | 2026-06-24 | locphan8541 | Phase 10: thêm search box JS real-time cho Subjects và Decks; Mentor đặt `TimeLimitMinutes` trên Deck; countdown timer tự nộp bài; Leaderboard theo deck; Thống kê nội dung Mentor | Kiểm tra leaderboard và mentor stats trên trình duyệt | ALTER TABLE thêm `TimeLimitMinutes INT NOT NULL DEFAULT 0` cho Decks |
 | 2026-06-24 | locphan8541 | Phase 10 (tiếp): Báo cáo câu hỏi sai (bảng `QuestionReports`, nút báo cáo trên Result, trang quản lý cho Mentor/Admin); ghi log `LoginAttempts` vào DB; trang Admin xem lịch sử đăng nhập; pull flashcard 3D flip từ teammate | Cập nhật TASK_PROGRESS.md và push lên branch mới | Build thành công 0 warning 0 error; app chạy tại http://localhost:5039 |
+| 2026-06-25 | Antigravity | Cải tiến học Flashcard: track trạng thái từng thẻ không vượt tổng thẻ, Enter đánh dấu đã nhớ, R cần học lại, thêm bảng hướng dẫn phím tắt, hiệu ứng lướt flashcard (swipe right = đã nhớ, swipe left = học lại); Sửa UX chọn câu trả lời quiz (toàn bộ ô đáp án đều click được). | Phát triển các tính năng tiếp theo (Match game, Learn mode, Timer update). | Đẩy lên nhánh `feature/flashcard-improvements-and-quiz-ux` |
