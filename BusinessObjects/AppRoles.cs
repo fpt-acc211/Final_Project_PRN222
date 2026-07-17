@@ -8,3 +8,10 @@ public static class AppRoles
 
     public static readonly string[] All = [Admin, Mentor, User];
 }
+
+public enum AdminMutationResult
+{
+    Updated,
+    NotFound,
+    LastActiveAdmin
+}
