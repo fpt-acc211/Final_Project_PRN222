@@ -1,180 +1,138 @@
-﻿# Quiz Management System
+# Quiz Management System
 
-Quiz Management System là ứng dụng web hỗ trợ người dùng tạo, quản lý và luyện tập câu hỏi trắc nghiệm theo cấu trúc **Môn học -> Bộ đề -> Câu hỏi -> Đáp án**. Dự án được xây dựng bằng ASP.NET Core MVC theo kiến trúc phân tầng, phù hợp cho final project môn PRN222.
+Ứng dụng web quản lý và luyện tập câu hỏi trắc nghiệm, được xây dựng bằng ASP.NET Core MVC và SQL Server cho final project PRN222.
 
-## Mục Tiêu Dự Án
+> Trạng thái kiểm tra gần nhất: .NET SDK 9.0.313, Release build `0 warning / 0 error`, `114/114` test đạt.
 
-- Quản lý ngân hàng câu hỏi cá nhân theo từng người dùng.
-- Hỗ trợ câu hỏi một đáp án đúng và nhiều đáp án đúng.
-- Cho phép người dùng luyện tập/làm bài kiểm tra từ bộ đề đã tạo.
-- Lưu lịch sử làm bài và kết quả để theo dõi tiến độ học tập.
-- Duy trì cấu trúc code rõ ràng, dễ bảo trì và dễ mở rộng.
+## Tính năng chính
 
-## Tech Stack
+- Quản lý học liệu theo cấu trúc **Môn học → Bộ đề → Câu hỏi → Đáp án**.
+- Hỗ trợ câu hỏi một hoặc nhiều đáp án đúng, Markdown và soft delete.
+- Làm quiz có trộn câu, giới hạn thời gian, lưu lượt làm, kết quả và lịch sử chi tiết.
+- Học bằng flashcard và xem thống kê cá nhân hoặc thống kê nội dung.
+- Import câu hỏi từ `.xlsx` hoặc Aiken text; export bộ đề ra `.docx` và `.pdf` Unicode.
+- Báo cáo câu hỏi có vấn đề và theo dõi trạng thái xử lý.
+- Cookie authentication, phân quyền `Admin` / `Mentor` / `User`, rate limiting và nhật ký đăng nhập.
+- Admin quản lý tài khoản, vai trò, trạng thái hoạt động và học liệu toàn hệ thống.
+
+## Công nghệ
 
 | Thành phần | Công nghệ |
 | --- | --- |
-| Web Framework | ASP.NET Core MVC (.NET 9) |
-| Language | C# |
-| View Engine | Razor Views |
-| Database | SQL Server |
-| ORM | Entity Framework Core 9 |
-| Authentication | Cookie Authentication + Policy-based Authorization |
-| UI Framework | Bootstrap 5 Dark Mode + CSS Glassmorphism |
-| Architecture | N-Tier, DAO, Repository, Service |
-| Import/Export | OpenXML `.xlsx` parser, custom `.docx`/`.pdf` export |
+| Backend | C#, ASP.NET Core MVC, .NET 9 |
+| View | Razor Views, Bootstrap 5, CSS |
+| Database | SQL Server, Entity Framework Core 9 |
+| Authentication | Cookie Authentication, policy-based authorization |
+| Testing | xUnit, ASP.NET Core MVC tests, SQL Server LocalDB integration tests |
+| Kiến trúc | N-Tier: Controller → Service → Repository → DAO → DbContext |
 
-## Trạng Thái Hiện Tại
+## Cấu trúc solution
 
-| Nhóm chức năng | Trạng thái |
-| --- | --- |
-| Khởi tạo solution N-Tier | Hoàn thành |
-| Database script và EF Core models | Hoàn thành |
-| Cookie authentication + Role/Policy | Hoàn thành |
-| Đăng ký, đăng nhập, đăng xuất | Hoàn thành |
-| CRUD Môn học | Hoàn thành |
-| CRUD Bộ đề | Hoàn thành |
-| CRUD Câu hỏi và Đáp án | Hoàn thành |
-| Soft delete và Ownership | Hoàn thành |
-| Quiz engine (shuffle, chấm điểm, lưu history) | Hoàn thành |
-| Test history và Dashboard | Hoàn thành |
-| Thống kê nâng cao + biểu đồ | Hoàn thành |
-| Flashcard (spaced repetition trong phiên) | Hoàn thành |
-| Import câu hỏi từ Excel (.xlsx) và text | Hoàn thành |
-| Export bộ đề ra Word (.docx) và PDF | Hoàn thành |
-| Admin panel (quản lý user, Role) | Hoàn thành |
-| Hồ sơ cá nhân (xem, sửa, đổi mật khẩu) | Hoàn thành |
-| Dark Theme + Glassmorphism UI | Hoàn thành |
-| Cải thiện readability / contrast (WCAG AA) | Hoàn thành |
-| Responsive mobile | Cơ bản hoạt động, chưa kiểm tra đầy đủ |
-| Demo data và seed | Hoàn thành |
-
-## Kiến Trúc Hệ Thống
-
-Dự án được chia thành các tầng chính:
-
-| Project | Vai trò |
-| --- | --- |
-| `BusinessObjects` | Chứa entity/model ánh xạ database và read model cho quiz, lịch sử, thống kê |
-| `DataAccessObjects` | Chứa `QuizManagementDbContext` và các lớp DAO xử lý truy vấn dữ liệu |
-| `Repositories` | Định nghĩa interface và repository gọi xuống DAO |
-| `Services` | Chứa business logic, validation và điều phối nghiệp vụ |
-| `QuizManagement` | ASP.NET Core MVC app: Controllers, ViewModels, Razor Views, static assets |
-| `QuizManagement.Tests` | Unit, controller, view và SQL Server integration tests |
+```text
+Final_Project_PRN222/
+├── BusinessObjects/         # Entity và read model
+├── DataAccessObjects/       # DbContext, DAO và truy vấn dữ liệu
+├── Repositories/            # Repository interfaces và implementations
+├── Services/                # Business logic, validation, import/export
+├── QuizManagement/          # ASP.NET Core MVC application
+│   ├── Controllers/
+│   ├── Infrastructure/
+│   ├── ViewModels/
+│   ├── Views/
+│   └── wwwroot/
+├── QuizManagement.Tests/    # Unit, controller, view và integration tests
+├── CreateDB.sql             # Bootstrap schema hiện tại
+├── SeedDemoData.sql         # Dữ liệu demo tùy chọn
+├── global.json              # Pin .NET SDK
+└── QuizManagementSystem.slnx
+```
 
 Luồng xử lý chính:
 
 ```text
-Razor View -> Controller -> Service -> Repository -> DAO -> DbContext -> SQL Server
+Razor View → Controller → Service → Repository → DAO → DbContext → SQL Server
 ```
 
-Ví dụ pattern đang dùng:
+## Yêu cầu môi trường
 
-```csharp
-public void UpdateSubject(Subject subject)
-    => SubjectDAO.Instance.UpdateSubject(_context, subject);
+- [.NET SDK 9.0.313](https://dotnet.microsoft.com/download/dotnet/9.0), được pin trong `global.json`.
+- SQL Server 2019 trở lên, SQL Server Express hoặc SQL Server LocalDB.
+- SQL Server Management Studio hoặc công cụ có thể chạy T-SQL script.
+- Visual Studio 2022 là tùy chọn; có thể build và chạy hoàn toàn bằng CLI.
+- SQL Server LocalDB nếu muốn chạy đầy đủ integration tests.
+
+## Cài đặt và chạy
+
+Thực hiện các bước sau từ thư mục gốc repository.
+
+### 1. Tạo database
+
+Mở và chạy toàn bộ [CreateDB.sql](./CreateDB.sql) bằng SQL Server Management Studio.
+
+Script có ba hành vi rõ ràng:
+
+- Chưa có `QuizManagementDB`: tự tạo database và schema đầy đủ.
+- Database đã đúng schema hiện tại: kiểm tra rồi kết thúc, không thay đổi dữ liệu.
+- Database cũ hoặc thiếu schema: dừng với lỗi `51020` hoặc `51021`; không tự sửa và không tự xóa dữ liệu.
+
+Project dùng `CreateDB.sql` làm nguồn schema chính, không yêu cầu chạy EF migration.
+
+### 2. Cấu hình connection string
+
+Tạo file local từ mẫu:
+
+```powershell
+Copy-Item .\QuizManagement\appsettings.Local.example.json `
+          .\QuizManagement\appsettings.Local.json
 ```
 
-DAO sử dụng `Instance` để giữ style quen thuộc của môn học, còn `DbContext` vẫn được quản lý bởi Dependency Injection để tránh hard-code connection string và hạn chế lỗi lifetime trong web app.
+Cập nhật `ConnectionStrings:DefaultConnection` trong `appsettings.Local.json`.
 
-## Cấu Trúc Thư Mục
+SQL Server Express với SQL Authentication:
 
-```text
-Final_Project_PRN222/
-├── BusinessObjects/
-├── DataAccessObjects/
-├── Repositories/
-├── Services/
-├── QuizManagement/
-│   ├── Controllers/
-│   ├── ViewModels/
-│   ├── Views/
-│   └── wwwroot/
-├── QuizManagement.Tests/
-├── CreateDB.sql
-├── SeedDemoData.sql
-├── global.json
-└── README.md
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=QuizManagementDB;User Id=sa;Password=your_password;TrustServerCertificate=True;"
+  }
+}
 ```
 
-## Database
+Windows Authentication:
 
-Các bảng chính:
-
-- `Users`
-- `Subjects`
-- `Decks`
-- `Questions`
-- `Answers`
-- `QuizAttempts`
-- `TestHistories`
-- `TestResultDetails`
-- `QuestionReports`
-- `LoginAttempts`
-
-Trạng thái khóa tạm do đăng nhập sai được giữ trong `IMemoryCache`; lịch sử đăng nhập thành công/thất bại được lưu tại `LoginAttempts` để Admin theo dõi.
-
-Quan hệ chính:
-
-```text
-User 1 - n Subject
-Subject 1 - n Deck
-Deck 1 - n Question
-Question 1 - n Answer
-User/Deck 1 - n QuizAttempt
-User 1 - n TestHistory
-Deck 1 - n TestHistory
-QuizAttempt 1 - 0..1 TestHistory
-TestHistory 1 - n TestResultDetail
-User/Question 1 - n QuestionReport
-User 1 - n LoginAttempt (UserId nullable)
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=QuizManagementDB;Trusted_Connection=True;TrustServerCertificate=True;"
+  }
+}
 ```
 
-Script tạo database nằm tại [CreateDB.sql](./CreateDB.sql). Dữ liệu demo nằm tại [SeedDemoData.sql](./SeedDemoData.sql).
+`appsettings.Local.json` đã được Git ignore. Không commit connection string hoặc credential thật.
 
-## Hướng Dẫn Cài Đặt
+### 3. Restore, build và test
 
-### 1. Yêu cầu môi trường
-
-- Visual Studio 2022 hoặc mới hơn
-- .NET SDK 9.0.313 (được pin bởi `global.json`)
-- SQL Server 2019+ hoặc SQL Server Express
-- SQL Server Management Studio hoặc công cụ tương đương
-
-### 2. Tạo database
-
-Mở SQL Server Management Studio và chạy script schema hoàn chỉnh:
-
-```text
-CreateDB.sql
+```powershell
+dotnet restore
+dotnet build QuizManagementSystem.slnx -c Release
+dotnet test QuizManagementSystem.slnx -c Release --no-build
 ```
 
-`CreateDB.sql` là file bootstrap duy nhất cho schema hiện tại và có thể chạy lại an toàn:
+Integration tests tạo database tạm trên `(localdb)\MSSQLLocalDB` và tự xóa sau khi chạy.
 
-- Chưa có `QuizManagementDB`: script tự tạo database và toàn bộ bảng/index/constraint.
-- Database đã đúng schema hiện tại: script chỉ kiểm tra rồi kết thúc, không thay đổi dữ liệu.
-- Database cũ hoặc thiếu một phần schema: script báo lỗi `51020`/`51021` và không tự sửa hoặc tự drop.
+### 4. Chạy ứng dụng
 
-Với database demo có thể xóa toàn bộ, cách đơn giản nhất khi gặp schema cũ là drop database rồi chạy lại `CreateDB.sql`. Chỉ thực hiện lệnh sau khi chắc chắn database không chứa dữ liệu cần giữ:
-
-```sql
-USE [master];
-ALTER DATABASE [QuizManagementDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-DROP DATABASE [QuizManagementDB];
+```powershell
+dotnet run --project QuizManagement --launch-profile http
 ```
 
-Project dùng `CreateDB.sql` làm nguồn schema chính và không chạy EF `InitialCreate`.
+Mở [http://localhost:5039](http://localhost:5039).
 
-Nếu cần dữ liệu demo, chạy thêm:
+Với Visual Studio, mở `QuizManagementSystem.slnx`, chọn `QuizManagement` làm startup project rồi chạy profile `http` hoặc `https`.
 
-```text
-SeedDemoData.sql
-```
+## Dữ liệu demo
 
-> [!WARNING]
-> `SeedDemoData.sql` chỉ dành cho database demo cô lập. Script tạo tài khoản với mật khẩu công khai và thay thế dữ liệu thuộc các seed identity cố định. Không chạy trên production hoặc database có dữ liệu người dùng thật.
-
-Script mặc định từ chối chạy. Trong **cùng SSMS connection**, bật opt-in cho đúng một lần chạy rồi thực thi file:
+Dữ liệu demo là tùy chọn và chỉ được dùng trên database cô lập. Sau khi tạo schema, mở [SeedDemoData.sql](./SeedDemoData.sql) trong SSMS. Trong chính query session đó, chạy opt-in sau trước khi chạy phần còn lại của script:
 
 ```sql
 EXEC sys.sp_set_session_context
@@ -182,9 +140,9 @@ EXEC sys.sp_set_session_context
     @value = 1;
 ```
 
-Script tự xóa opt-in khi hoàn tất hoặc rollback; lần chạy sau phải xác nhận lại.
+Không đổi connection/session giữa lệnh opt-in và script seed. Opt-in được tự xóa khi script hoàn tất hoặc rollback.
 
-Script demo có thể chạy lại nhiều lần trên database demo. Mỗi lần chạy, script thay thế riêng bộ seed cố định và tạo dữ liệu mẫu cho tài khoản, môn học, bộ đề có/không giới hạn thời gian, câu hỏi single/multiple choice, lượt làm bài hoàn tất, lịch sử có snapshot, báo cáo câu hỏi đang chờ/đã xử lý và nhật ký đăng nhập thành công/thất bại. Script tạo sẵn 3 tài khoản có credential công khai:
+Script có thể chạy lại; mỗi lần chạy chỉ thay thế dữ liệu thuộc các seed identity cố định. Dữ liệu mẫu gồm tài khoản, học liệu, quiz attempt, lịch sử, báo cáo câu hỏi và login attempt.
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -192,185 +150,88 @@ Script demo có thể chạy lại nhiều lần trên database demo. Mỗi lầ
 | Mentor | `mentor.demo@quiz.local` | `Test@123456` |
 | User | `user.demo@quiz.local` | `Test@123456` |
 
-Database mặc định:
+> [!WARNING]
+> Các credential trên là công khai. Không chạy `SeedDemoData.sql` trên production hoặc database chứa dữ liệu thật.
 
-```text
-QuizManagementDB
+### Reset database demo
+
+Khi database demo có schema cũ, có thể xóa và tạo lại:
+
+```sql
+USE [master];
+ALTER DATABASE [QuizManagementDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE [QuizManagementDB];
 ```
 
-### 3. Cấu hình connection string
+Sau đó chạy lại `CreateDB.sql` và, nếu cần, `SeedDemoData.sql`. Thao tác này xóa toàn bộ dữ liệu hiện có.
 
-Copy file mẫu:
+## Tạo Admin local tùy chọn
 
-```text
-QuizManagement/appsettings.Local.example.json
-```
-
-thành:
-
-```text
-QuizManagement/appsettings.Local.json
-```
-
-Sau đó cập nhật `DefaultConnection` trong `appsettings.Local.json` theo máy local của bạn.
-
-Ví dụ dùng SQL Server Express:
+Nếu không dùng demo seed, có thể bật `AdminSeed` trong `appsettings.Local.json`:
 
 ```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=QuizManagementDB;User Id=sa;Password=your_password;TrustServerCertificate=True;"
+{
+  "AdminSeed": {
+    "Enabled": true,
+    "Username": "Admin",
+    "Email": "admin@example.local",
+    "Password": "a-strong-local-password"
+  }
 }
 ```
 
-Nếu dùng Windows Authentication:
+Mật khẩu phải dài 15–100 ký tự. Seed chỉ tạo tài khoản khi hệ thống chưa có Admin. Sau lần chạy đầu tiên, đặt `Enabled` về `false`.
 
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=QuizManagementDB;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
+## Phân quyền
 
-Không sửa connection string thật trong `appsettings.json`. `appsettings.Local.json` đã được ignore bởi Git.
-
-### 4. Tạo Admin đầu tiên (tùy chọn)
-
-Trong `appsettings.Local.json`, bật `AdminSeed` và đặt credential riêng:
-
-```json
-"AdminSeed": {
-  "Enabled": true,
-  "Username": "Admin",
-  "Email": "admin@example.local",
-  "Password": "a-strong-local-password"
-}
-```
-
-Password phải có từ 15 đến 100 ký tự. Seed chỉ chạy khi chưa có tài khoản mang role `Admin`; ứng dụng không ghi password vào log. Sau khi tạo Admin, nên đặt `Enabled` về `false`.
-
-### Giới hạn vòng đời tài khoản
-
-- Đăng ký và đổi mật khẩu yêu cầu passphrase 15–100 ký tự; không áp đặt quy tắc chữ hoa/số/ký hiệu. Tài khoản đã có vẫn đăng nhập bằng hash hiện hữu.
-- Ứng dụng chưa có xác minh email hoặc quên/đặt lại mật khẩu vì chưa tích hợp kênh gửi email và quy trình token an toàn. Không dựng endpoint giả hoặc dùng câu hỏi bảo mật; production cần thiết kế delivery, token một lần, thời hạn và audit trước khi bật recovery.
-
-### 5. Restore và build project
-
-Tại thư mục gốc solution:
-
-```bash
-dotnet restore
-dotnet build
-dotnet test
-```
-
-Kiểm tra gần nhất trên .NET SDK 9.0.313: Release build thành công với 0 warning/0 error và 114/114 test đạt.
-
-### 6. Chạy ứng dụng
-
-Cách 1: chạy bằng Visual Studio:
-
-1. Mở `QuizManagementSystem.slnx`.
-2. Set `QuizManagement` làm startup project.
-3. Chạy bằng `Ctrl + F5`.
-
-Cách 2: chạy bằng CLI:
-
-```bash
-dotnet run --project QuizManagement --launch-profile http
-```
-
-Ứng dụng mặc định chạy tại:
-
-```text
-http://localhost:5039
-```
-
-## Luồng Sử Dụng Hiện Có
-
-### Luồng cơ bản
-
-1. Đăng ký tài khoản / đăng nhập.
-2. User duyệt **Môn học** → chọn **Bộ đề** → học Flashcard hoặc làm Quiz.
-3. Mentor tạo **Môn học** → tạo **Bộ đề** → tạo **Câu hỏi** và **Đáp án** thuộc sở hữu của mình.
-4. Admin có thể quản lý toàn bộ học liệu và tài khoản trong hệ thống.
-5. Loại câu hỏi: `1` = một đáp án đúng, `2` = nhiều đáp án đúng.
-6. Vào bộ đề → bấm **Bắt đầu Quiz** → cấu hình số câu → làm bài → xem kết quả.
-7. Xem lịch sử và thống kê học tập cá nhân tại `Thống kê`.
-
-### Luồng nâng cao
-
-- **Import**: Vào bộ đề → Import → tải file `.xlsx` mẫu → điền câu hỏi → upload và xem preview → xác nhận.
-- **Export**: Vào bộ đề → Export → chọn định dạng Word hoặc PDF → tải file về.
-- **Flashcard**: Vào bộ đề → Flashcard → lật thẻ, đánh dấu nhớ/chưa nhớ để ôn lại.
-- **Markdown**: Nội dung câu hỏi và giải thích hỗ trợ cú pháp Markdown cơ bản.
-
-### Phân quyền
-
-| Role | Quyền |
+| Role | Quyền chính |
 | --- | --- |
-| `Admin` | Toàn quyền học liệu; xem dashboard; quản lý user, role và trạng thái tài khoản |
-| `Mentor` | Xem toàn bộ học liệu; CRUD/import/export học liệu do mình sở hữu |
-| `User` | Xem học liệu; học Flashcard; làm Quiz; xem lịch sử và thống kê cá nhân |
+| `Admin` | Quản lý toàn bộ học liệu, tài khoản, role, login attempt và báo cáo |
+| `Mentor` | Xem toàn bộ học liệu; quản lý/import/export nội dung do mình sở hữu |
+| `User` | Xem học liệu, học flashcard, làm quiz, gửi báo cáo và xem thống kê cá nhân |
 
-Hệ thống không cho Admin tự hạ role, tự vô hiệu hóa hoặc vô hiệu hóa Admin đang hoạt động cuối cùng.
+Các ràng buộc quan trọng:
 
-## Quy Tắc Nghiệp Vụ Đang Áp Dụng
+- Mentor chỉ sửa hoặc xóa học liệu thuộc sở hữu của mình; Admin quản lý toàn bộ.
+- Admin không thể tự hạ role, tự vô hiệu hóa hoặc vô hiệu hóa Admin hoạt động cuối cùng.
+- Tên môn học không trùng trong cùng chủ sở hữu; tên bộ đề không trùng trong cùng môn học.
+- Mỗi câu hỏi có ít nhất hai đáp án và phải thỏa quy tắc đáp án đúng theo loại câu hỏi.
+- Xóa môn học, bộ đề và câu hỏi sử dụng soft delete để giữ lịch sử.
 
-- Mọi tài khoản đã đăng nhập được xem học liệu đang hoạt động.
-- Mentor chỉ được sửa/xóa học liệu thuộc sở hữu của mình; Admin được quản lý toàn bộ.
-- User không được tạo, sửa, xóa, import hoặc export học liệu.
-- Tên môn học không được trùng trong cùng một user.
-- Tên bộ đề không được trùng trong cùng một môn học.
-- Mỗi câu hỏi phải có ít nhất 2 đáp án.
-- Câu hỏi một đáp án đúng phải có đúng 1 đáp án được đánh dấu đúng.
-- Câu hỏi nhiều đáp án đúng phải có ít nhất 1 đáp án được đánh dấu đúng.
-- Xóa môn học/bộ đề/câu hỏi dùng soft delete thay vì xóa vật lý.
+## Kiểm thử
 
-## Roadmap
+Test project hiện có 114 test, bao phủ:
 
-### Đã hoàn thành
+- Service và validation nghiệp vụ.
+- Controller, authorization, rate limiting và error handling.
+- Quiz attempt, lịch sử và result snapshot.
+- Import atomicity, concurrency và unique constraints trên SQL Server.
+- Demo seed, UTC date/time, soft delete và quyền sở hữu dữ liệu.
+- PDF Unicode và phản hồi lỗi trên Razor Views.
 
-- [x] Quiz Engine: cấu hình, shuffle Fisher-Yates, chấm điểm single/multiple choice, lưu history + result details.
-- [x] Dashboard và lịch sử làm bài, xem lại kết quả chi tiết.
-- [x] Thống kê nâng cao: biểu đồ 12 lần gần nhất, group theo môn/bộ đề.
-- [x] Import câu hỏi từ Excel (.xlsx) và text (Aiken format) với preview.
-- [x] Export bộ đề ra Word (.docx) và PDF.
-- [x] Markdown cho nội dung câu hỏi và giải thích.
-- [x] Flashcard / spaced repetition trong phiên.
-- [x] Admin panel: tổng quan hệ thống, quản lý người dùng và vai trò.
-- [x] Dark Theme + Glassmorphism toàn bộ UI (12 views).
-- [x] Cải thiện contrast và readability đạt WCAG AA.
-- [x] Seed demo data: 3 tài khoản, 2 subjects, 3 decks, 21 questions.
+Chạy lại toàn bộ:
 
-### Kiểm tra thủ công trước demo
-
-- [ ] Kiểm tra responsive đầy đủ trên mobile.
-- [ ] Slide/demo script.
-- [ ] Tag release bản nộp cuối.
-
-## Git Workflow Đề Xuất
-
-Không code trực tiếp trên `main`.
-
-Tạo branch theo chức năng:
-
-```bash
-git checkout -b feature/login
-git checkout -b feature/subject-crud
-git checkout -b feature/quiz-engine
+```powershell
+dotnet test QuizManagementSystem.slnx -c Release
 ```
 
-Trước khi bắt đầu làm việc:
+## Giới hạn hiện tại
 
-```bash
-git pull origin main
-```
+- Chưa tích hợp email verification hoặc quy trình quên/đặt lại mật khẩu.
+- Trạng thái khóa đăng nhập tạm thời nằm trong `IMemoryCache` và được reset khi ứng dụng restart; lịch sử đăng nhập vẫn được lưu trong database.
+- Flashcard spaced repetition chỉ tồn tại trong phiên học hiện tại.
+- Responsive mobile đã hỗ trợ cơ bản nhưng vẫn cần kiểm tra thủ công trên nhiều kích thước màn hình.
 
-Trước khi push:
+## Xử lý lỗi thường gặp
 
-```bash
-dotnet build
-```
+- **Không kết nối được database:** kiểm tra SQL Server đang chạy và `DefaultConnection` trong `appsettings.Local.json`.
+- **`CreateDB.sql` báo `51020`/`51021`:** database đang có schema cũ hoặc không đầy đủ; với dữ liệu demo, reset database rồi chạy lại script.
+- **`SeedDemoData.sql` báo `51019`:** opt-in chưa được đặt trong đúng SQL session.
+- **Integration tests không kết nối được:** cài hoặc khởi động SQL Server LocalDB instance `MSSQLLocalDB`.
+- **HTTPS certificate chưa được trust:** dùng profile `http`, hoặc chạy `dotnet dev-certs https --trust`.
 
-## Ghi Chú Phát Triển
+## Ghi chú bảo mật
 
-- Không commit `bin/`, `obj/`, `.vs/` và các file cấu hình local chứa thông tin nhạy cảm.
+- Không commit `appsettings.Local.json`, Data Protection keys, `bin/`, `obj/` hoặc `.vs/`.
+- Không dùng demo credential ngoài môi trường demo cô lập.
+- Không bật `AdminSeed` với password mẫu hoặc giữ seed bật sau khi đã tạo Admin.
