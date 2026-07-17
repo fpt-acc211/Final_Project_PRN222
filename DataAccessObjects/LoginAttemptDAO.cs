@@ -1,4 +1,5 @@
 using BusinessObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccessObjects;
 
@@ -26,5 +27,23 @@ public class LoginAttemptDAO
             .OrderByDescending(a => a.CreatedAt)
             .Take(count)
             .ToList();
+    }
+
+    public Task<List<LoginAttempt>> GetRecentAsync(
+        QuizManagementDbContext context,
+        int count,
+        bool? success)
+    {
+        var query = context.LoginAttempts.AsQueryable();
+        if (success.HasValue)
+        {
+            query = query.Where(attempt => attempt.IsSuccess == success.Value);
+        }
+
+        return query
+            .AsNoTracking()
+            .OrderByDescending(attempt => attempt.CreatedAt)
+            .Take(Math.Clamp(count, 1, 1000))
+            .ToListAsync();
     }
 }

@@ -63,7 +63,7 @@
                 {
                     <span class="badge bg-success">Hoạt động</span>
                 }
-                <div class="text-muted small mt-2">Tham gia: @user.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                <div class="text-muted small mt-2">Tham gia: @VietnamTime.FromUtc(user.CreatedAt).ToString("dd/MM/yyyy")</div>
             </div>
         </div>
     </div>

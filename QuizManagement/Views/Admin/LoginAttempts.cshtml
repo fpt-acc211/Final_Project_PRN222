@@ -55,7 +55,7 @@ else
                                     }
                                 </td>
                                 <td class="text-center" style="font-size:.85rem;color:var(--text-muted);">
-                                    @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                                    @VietnamTime.FromUtc(item.CreatedAt).ToString("dd/MM/yyyy HH:mm:ss")
                                 </td>
                             </tr>
                         }

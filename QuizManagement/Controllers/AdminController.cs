@@ -40,7 +40,7 @@ namespace QuizManagement.Controllers
             var users = _adminService.GetAllUsers(search, role);
             var model = new UserListViewModel
             {
-                Users = users,
+                Users = users.Select(ToAdminUserViewModel).ToList(),
                 SearchQuery = search,
                 RoleFilter = role
             };
@@ -56,7 +56,7 @@ namespace QuizManagement.Controllers
             var (subjects, decks, questions, histories) = _adminService.GetUserStats(id);
             var model = new UserDetailViewModel
             {
-                User = user,
+                User = ToAdminUserViewModel(user),
                 SubjectCount = subjects,
                 DeckCount = decks,
                 QuestionCount = questions,
@@ -103,16 +103,14 @@ namespace QuizManagement.Controllers
                 return RedirectToAction(nameof(UserDetail), new { id = model.UserId });
             }
 
-            if (user.Role == AppRoles.Admin &&
-                model.NewRole != AppRoles.Admin &&
-                !user.IsDisabled &&
-                _adminService.CountActiveAdmins() <= 1)
+            var result = _adminService.ChangeRole(user.Id, model.NewRole);
+            if (result == AdminMutationResult.NotFound)
+                return NotFound();
+            if (result == AdminMutationResult.LastActiveAdmin)
             {
                 TempData["ErrorMessage"] = "Hệ thống phải luôn có ít nhất một Admin đang hoạt động.";
                 return RedirectToAction(nameof(UserDetail), new { id = model.UserId });
             }
-
-            _adminService.ChangeRole(user, model.NewRole);
 
             TempData["SuccessMessage"] = $"Đã đổi vai trò của {user.Username} thành {model.NewRole}.";
             return RedirectToAction(nameof(UserDetail), new { id = model.UserId });
@@ -133,15 +131,14 @@ namespace QuizManagement.Controllers
             var user = _adminService.GetUserById(id);
             if (user is null) return NotFound();
 
-            if (!user.IsDisabled &&
-                user.Role == AppRoles.Admin &&
-                _adminService.CountActiveAdmins() <= 1)
+            var result = _adminService.SetDisabled(user.Id, !user.IsDisabled);
+            if (result == AdminMutationResult.NotFound)
+                return NotFound();
+            if (result == AdminMutationResult.LastActiveAdmin)
             {
                 TempData["ErrorMessage"] = "Không thể vô hiệu hóa Admin đang hoạt động cuối cùng.";
                 return RedirectToAction(nameof(UserDetail), new { id });
             }
-
-            _adminService.SetDisabled(user, !user.IsDisabled);
 
             var action = user.IsDisabled ? "vô hiệu hóa" : "kích hoạt";
             TempData["SuccessMessage"] = $"Đã {action} tài khoản {user.Username}.";
@@ -149,10 +146,9 @@ namespace QuizManagement.Controllers
         }
 
         // GET /Admin/LoginAttempts
-        public IActionResult LoginAttempts(bool? success)
+        public async Task<IActionResult> LoginAttempts(bool? success)
         {
-            var all = _loginAttemptLogService.GetRecent(300);
-            var filtered = success.HasValue ? all.Where(a => a.IsSuccess == success.Value).ToList() : all;
+            var filtered = await _loginAttemptLogService.GetRecentAsync(300, success);
             ViewBag.SuccessFilter = success;
             return View(filtered);
         }
@@ -162,5 +158,17 @@ namespace QuizManagement.Controllers
             return User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
         }
+
+        private static AdminUserViewModel ToAdminUserViewModel(User user)
+            => new()
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                AvatarUrl = user.AvatarUrl,
+                IsDisabled = user.IsDisabled,
+                CreatedAt = user.CreatedAt
+            };
     }
 }

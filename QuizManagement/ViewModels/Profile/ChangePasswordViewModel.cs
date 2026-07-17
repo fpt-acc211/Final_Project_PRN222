@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using QuizManagement.Infrastructure;
 
 namespace QuizManagement.ViewModels.Profile
 {
@@ -9,7 +10,10 @@ namespace QuizManagement.ViewModels.Profile
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mật khẩu mới là bắt buộc.")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự.")]
+        [StringLength(
+            PasswordPolicy.MaximumLength,
+            MinimumLength = PasswordPolicy.MinimumLength,
+            ErrorMessage = "Mật khẩu mới phải có từ 15 đến 100 ký tự.")]
         [DataType(DataType.Password)]
         public string NewPassword { get; set; } = string.Empty;
 

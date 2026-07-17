@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using QuizManagement.Infrastructure;
 using QuizManagement.ViewModels.Account;
 using Services;
@@ -13,6 +14,8 @@ namespace QuizManagement.Controllers
 {
     public class AccountController : Controller
     {
+        private const string RegistrationConflictMessage =
+            "Không thể đăng ký với thông tin này. Vui lòng kiểm tra lại hoặc dùng thông tin khác.";
         private readonly IUserService _userService;
         private readonly ILoginAttemptService _loginAttemptService;
         private readonly ILoginAttemptLogService _loginAttemptLogService;
@@ -37,6 +40,7 @@ namespace QuizManagement.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [EnableRateLimiting(AuthenticationRateLimitPolicies.Register)]
         [ValidateAntiForgeryToken]
         public IActionResult Register(RegisterViewModel model)
         {
@@ -48,15 +52,11 @@ namespace QuizManagement.Controllers
                 return View(model);
             }
 
-            if (_userService.GetByEmail(model.Email) is not null)
+            var emailExists = _userService.GetByEmail(model.Email) is not null;
+            var usernameExists = _userService.GetByUsername(model.Username) is not null;
+            if (emailExists || usernameExists)
             {
-                ModelState.AddModelError(nameof(model.Email), "Email này đã được sử dụng.");
-                return View(model);
-            }
-
-            if (_userService.GetByUsername(model.Username) is not null)
-            {
-                ModelState.AddModelError(nameof(model.Username), "Tên người dùng này đã được sử dụng.");
+                ModelState.AddModelError(string.Empty, RegistrationConflictMessage);
                 return View(model);
             }
 
@@ -71,7 +71,11 @@ namespace QuizManagement.Controllers
             };
 
             user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
-            _userService.CreateUser(user);
+            if (!_userService.TryCreateUser(user))
+            {
+                ModelState.AddModelError(string.Empty, RegistrationConflictMessage);
+                return View(model);
+            }
 
             TempData["SuccessMessage"] = "Đăng ký thành công. Bạn có thể đăng nhập ngay.";
             return RedirectToAction(nameof(Login));
@@ -86,6 +90,7 @@ namespace QuizManagement.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [EnableRateLimiting(AuthenticationRateLimitPolicies.Login)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {

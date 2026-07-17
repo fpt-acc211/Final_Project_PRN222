@@ -25,4 +25,6 @@ public class LoginAttemptLogService : ILoginAttemptLogService
     }
 
     public List<LoginAttempt> GetRecent(int count = 200) => _repository.GetRecent(count);
+    public Task<List<LoginAttempt>> GetRecentAsync(int count, bool? success)
+        => _repository.GetRecentAsync(count, success);
 }

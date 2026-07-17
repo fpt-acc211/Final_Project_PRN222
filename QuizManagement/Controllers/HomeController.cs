@@ -3,6 +3,8 @@ using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using QuizManagement.ViewModels.Home;
 using Services;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace QuizManagement.Controllers
@@ -47,6 +49,25 @@ namespace QuizManagement.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        [AllowAnonymous]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            var exception = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+            if (exception?.Error is not null)
+            {
+                _logger.LogError(
+                    exception.Error,
+                    "Unhandled exception at {Path}. RequestId: {RequestId}",
+                    exception.Path,
+                    requestId);
+            }
+
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View(new ErrorViewModel { RequestId = requestId });
         }
 
         private string CurrentUserId()
