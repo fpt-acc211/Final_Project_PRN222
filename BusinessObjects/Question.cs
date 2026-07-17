@@ -25,6 +25,8 @@ public partial class Question
 
     public string? UpdatedBy { get; set; }
 
+    public byte[] RowVersion { get; set; } = [];
+
     public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
 
     public virtual Deck Deck { get; set; } = null!;

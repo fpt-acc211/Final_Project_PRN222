@@ -52,7 +52,7 @@
                     <dt class="col-sm-4 text-muted">Vai trò</dt>
                     <dd class="col-sm-8">@(Model.Role ?? "User")</dd>
                     <dt class="col-sm-4 text-muted">Tham gia</dt>
-                    <dd class="col-sm-8">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                    <dd class="col-sm-8">@VietnamTime.FromUtc(Model.CreatedAt).ToString("dd/MM/yyyy HH:mm")</dd>
                 </dl>
             </div>
         </div>

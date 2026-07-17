@@ -16,7 +16,7 @@ namespace Repositories
 
         public User? GetByEmail(string email)
         {
-           return _context.Users.FirstOrDefault(u => u.Email == email);
+            return _context.Users.FirstOrDefault(u => u.Email == email);
         }
 
         public User? GetByUsername(string username)

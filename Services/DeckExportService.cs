@@ -8,6 +8,8 @@ namespace Services
 {
     public class DeckExportService : IDeckExportService
     {
+        private static readonly Lazy<TrueTypePdfFont> PdfFont = new(LoadPdfFont);
+
         public byte[] ExportDeckToWord(Deck deck, IEnumerable<Question> questions)
         {
             using var memoryStream = new MemoryStream();
@@ -37,8 +39,9 @@ namespace Services
 
         public byte[] ExportDeckToPdf(Deck deck, IEnumerable<Question> questions)
         {
+            var font = PdfFont.Value;
             var lines = BuildPlainTextLines(deck, questions.ToList())
-                .SelectMany(line => WrapLine(RemoveDiacritics(line), 92))
+                .SelectMany(line => WrapLine(line, 80))
                 .ToList();
 
             if (lines.Count == 0)
@@ -46,28 +49,34 @@ namespace Services
                 lines.Add("No content.");
             }
 
+            var encoding = new PdfUnicodeEncoding(font, lines);
             var pages = lines.Chunk(48).ToList();
-            var objects = new List<string>
+            var objects = new List<byte[]>
             {
-                "<< /Type /Catalog /Pages 2 0 R >>",
-                string.Empty,
-                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+                AsciiBytes("<< /Type /Catalog /Pages 2 0 R >>"),
+                Array.Empty<byte>(),
+                AsciiBytes("<< /Type /Font /Subtype /Type0 /BaseFont /DejaVuSans /Encoding /Identity-H /DescendantFonts [4 0 R] /ToUnicode 7 0 R >>"),
+                AsciiBytes($"<< /Type /Font /Subtype /CIDFontType2 /BaseFont /DejaVuSans /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /CIDToGIDMap 8 0 R /DW 600 {encoding.BuildWidths()} >>"),
+                AsciiBytes($"<< /Type /FontDescriptor /FontName /DejaVuSans /Flags 32 /FontBBox [{font.XMin} {font.YMin} {font.XMax} {font.YMax}] /ItalicAngle 0 /Ascent {font.Ascent} /Descent {font.Descent} /CapHeight {font.Ascent} /StemV 80 /FontFile2 6 0 R >>"),
+                BuildStreamObject(font.Data, $"/Length1 {font.Data.Length}"),
+                BuildStreamObject(Encoding.ASCII.GetBytes(encoding.BuildToUnicodeCMap())),
+                BuildStreamObject(encoding.BuildCidToGlyphMap())
             };
 
             var pageIds = new List<int>();
             foreach (var pageLines in pages)
             {
-                var contentStream = BuildPdfContentStream(pageLines);
+                var contentStream = BuildPdfContentStream(pageLines, encoding);
                 var contentBytes = Encoding.ASCII.GetBytes(contentStream);
                 var contentObjectId = objects.Count + 1;
-                objects.Add($"<< /Length {contentBytes.Length} >>\nstream\n{contentStream}endstream");
+                objects.Add(BuildStreamObject(contentBytes));
 
                 var pageObjectId = objects.Count + 1;
                 pageIds.Add(pageObjectId);
-                objects.Add($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents {contentObjectId} 0 R >>");
+                objects.Add(AsciiBytes($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents {contentObjectId} 0 R >>"));
             }
 
-            objects[1] = $"<< /Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => $"{id} 0 R"))}] /Count {pageIds.Count} >>";
+            objects[1] = AsciiBytes($"<< /Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => $"{id} 0 R"))}] /Count {pageIds.Count} >>");
             return BuildPdf(objects);
         }
 
@@ -163,7 +172,9 @@ namespace Services
             return lines;
         }
 
-        private static string BuildPdfContentStream(IEnumerable<string> lines)
+        private static string BuildPdfContentStream(
+            IEnumerable<string> lines,
+            PdfUnicodeEncoding encoding)
         {
             var builder = new StringBuilder();
             builder.AppendLine("BT");
@@ -173,7 +184,7 @@ namespace Services
 
             foreach (var line in lines)
             {
-                builder.Append('(').Append(EscapePdfText(line)).AppendLine(") Tj");
+                builder.Append(encoding.Encode(line)).AppendLine(" Tj");
                 builder.AppendLine("T*");
             }
 
@@ -181,7 +192,7 @@ namespace Services
             return builder.ToString();
         }
 
-        private static byte[] BuildPdf(IReadOnlyList<string> objects)
+        private static byte[] BuildPdf(IReadOnlyList<byte[]> objects)
         {
             using var stream = new MemoryStream();
             WriteAscii(stream, "%PDF-1.4\n");
@@ -190,7 +201,9 @@ namespace Services
             for (var i = 0; i < objects.Count; i++)
             {
                 offsets.Add(stream.Position);
-                WriteAscii(stream, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+                WriteAscii(stream, $"{i + 1} 0 obj\n");
+                stream.Write(objects[i]);
+                WriteAscii(stream, "\nendobj\n");
             }
 
             var xrefOffset = stream.Position;
@@ -201,6 +214,16 @@ namespace Services
             }
 
             WriteAscii(stream, $"trailer\n<< /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefOffset}\n%%EOF");
+            return stream.ToArray();
+        }
+
+        private static byte[] BuildStreamObject(byte[] content, string? extraDictionary = null)
+        {
+            using var stream = new MemoryStream();
+            WriteAscii(stream,
+                $"<< /Length {content.Length}{(string.IsNullOrWhiteSpace(extraDictionary) ? string.Empty : $" {extraDictionary}")} >>\nstream\n");
+            stream.Write(content);
+            WriteAscii(stream, "\nendstream");
             return stream.ToArray();
         }
 
@@ -298,38 +321,20 @@ namespace Services
             stream.Write(bytes, 0, bytes.Length);
         }
 
+        private static byte[] AsciiBytes(string value) => Encoding.ASCII.GetBytes(value);
+
+        private static TrueTypePdfFont LoadPdfFont()
+        {
+            using var stream = typeof(DeckExportService).Assembly.GetManifestResourceStream(
+                "Services.Assets.Fonts.DejaVuSans.ttf")
+                ?? throw new InvalidOperationException("Embedded DejaVu Sans PDF font was not found.");
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            return new TrueTypePdfFont(memory.ToArray());
+        }
+
         private static string XmlEscape(string value)
             => SecurityElement.Escape(value) ?? string.Empty;
 
-        private static string EscapePdfText(string value)
-            => value.Replace("\\", "\\\\", StringComparison.Ordinal)
-                .Replace("(", "\\(", StringComparison.Ordinal)
-                .Replace(")", "\\)", StringComparison.Ordinal);
-
-        private static string RemoveDiacritics(string value)
-        {
-            var normalized = value.Normalize(NormalizationForm.FormD);
-            var builder = new StringBuilder();
-
-            foreach (var ch in normalized)
-            {
-                var category = CharUnicodeInfo.GetUnicodeCategory(ch);
-                if (category == UnicodeCategory.NonSpacingMark)
-                {
-                    continue;
-                }
-
-                var mapped = ch switch
-                {
-                    'đ' => 'd',
-                    'Đ' => 'D',
-                    _ => ch
-                };
-
-                builder.Append(mapped <= 126 ? mapped : '?');
-            }
-
-            return builder.ToString();
-        }
     }
 }

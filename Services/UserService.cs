@@ -1,4 +1,6 @@
 using BusinessObjects;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 
 namespace Services
@@ -18,7 +20,19 @@ namespace Services
 
         public User? GetById(string id) => _repository.GetById(id);
 
-        public void CreateUser(User user) => _repository.AddUser(user);
+        public bool TryCreateUser(User user)
+        {
+            try
+            {
+                _repository.AddUser(user);
+                return true;
+            }
+            catch (DbUpdateException exception)
+                when (exception.InnerException is SqlException { Number: 2601 or 2627 })
+            {
+                return false;
+            }
+        }
 
         public void UpdateProfile(User user) => _repository.UpdateUser(user);
 

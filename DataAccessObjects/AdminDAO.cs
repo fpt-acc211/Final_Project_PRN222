@@ -70,16 +70,42 @@ namespace DataAccessObjects
             );
         }
 
-        public int CountActiveAdmins(QuizManagementDbContext context)
+        public AdminMutationResult UpdateUserAccess(
+            QuizManagementDbContext context,
+            string userId,
+            string? newRole,
+            bool? isDisabled,
+            string securityStamp)
         {
-            return context.Users.Count(u => u.Role == AppRoles.Admin && !u.IsDisabled);
-        }
+            using var transaction = context.Database.BeginTransaction();
+            var activeAdminCount = context.Users
+                .FromSqlRaw("SELECT * FROM dbo.Users WITH (UPDLOCK, HOLDLOCK) WHERE Role = {0} AND IsDisabled = 0", AppRoles.Admin)
+                .Count();
+            var user = context.Users.SingleOrDefault(item => item.Id == userId);
+            if (user is null)
+            {
+                transaction.Rollback();
+                return AdminMutationResult.NotFound;
+            }
 
-        public void UpdateUser(QuizManagementDbContext context, User user)
-        {
+            var targetRole = newRole ?? user.Role;
+            var targetDisabled = isDisabled ?? user.IsDisabled;
+            var removesActiveAdmin = user.Role == AppRoles.Admin
+                && !user.IsDisabled
+                && (targetRole != AppRoles.Admin || targetDisabled);
+            if (removesActiveAdmin && activeAdminCount <= 1)
+            {
+                transaction.Rollback();
+                return AdminMutationResult.LastActiveAdmin;
+            }
+
+            user.Role = targetRole;
+            user.IsDisabled = targetDisabled;
+            user.SecurityStamp = securityStamp;
             user.UpdatedAt = DateTime.UtcNow;
-            context.Users.Update(user);
             context.SaveChanges();
+            transaction.Commit();
+            return AdminMutationResult.Updated;
         }
     }
 }

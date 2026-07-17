@@ -5,7 +5,6 @@ namespace Repositories
     public interface IDeckRepository
     {
         IEnumerable<Deck> GetDecksBySubjectForStudy(int subjectId);
-        IEnumerable<Deck> GetDecksBySubject(int subjectId, string userId);
         Deck? GetDeckForStudy(int id);
         Deck? GetDeckById(int id, string userId, bool allowAll = false);
         bool NameExists(int subjectId, string name, int? excludedId = null);

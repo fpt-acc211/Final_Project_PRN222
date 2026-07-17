@@ -6,6 +6,8 @@ namespace QuizManagement.ViewModels.Questions
     {
         public int Id { get; set; }
 
+        public string? RowVersion { get; set; }
+
         [Required]
         public int DeckId { get; set; }
 

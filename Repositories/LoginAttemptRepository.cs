@@ -14,4 +14,6 @@ public class LoginAttemptRepository : ILoginAttemptRepository
 
     public void Log(LoginAttempt attempt) => LoginAttemptDAO.Instance.Log(_context, attempt);
     public List<LoginAttempt> GetRecent(int count = 200) => LoginAttemptDAO.Instance.GetRecent(_context, count);
+    public Task<List<LoginAttempt>> GetRecentAsync(int count, bool? success)
+        => LoginAttemptDAO.Instance.GetRecentAsync(_context, count, success);
 }

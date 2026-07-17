@@ -13,15 +13,18 @@ namespace QuizManagement.Controllers
         private readonly IDeckService _deckService;
         private readonly IQuestionService _questionService;
         private readonly IQuestionImportService _questionImportService;
+        private readonly ILogger<QuestionImportController> _logger;
 
         public QuestionImportController(
             IDeckService deckService,
             IQuestionService questionService,
-            IQuestionImportService questionImportService)
+            IQuestionImportService questionImportService,
+            ILogger<QuestionImportController> logger)
         {
             _deckService = deckService;
             _questionService = questionService;
             _questionImportService = questionImportService;
+            _logger = logger;
         }
 
         public IActionResult Import(int deckId)
@@ -37,6 +40,11 @@ namespace QuizManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(QuestionImportLimits.MaxRequestBytes)]
+        [RequestFormLimits(
+            MultipartBodyLengthLimit = QuestionImportLimits.MaxRequestBytes,
+            ValueLengthLimit = QuestionImportLimits.MaxTextCharacters,
+            ValueCountLimit = QuestionImportLimits.MaxFormValues)]
         public IActionResult Preview(QuestionImportInputViewModel model)
         {
             var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId(), IsAdmin());
@@ -52,6 +60,14 @@ namespace QuizManagement.Controllers
             {
                 if (model.ExcelFile is { Length: > 0 })
                 {
+                    sourceName = Path.GetFileName(model.ExcelFile.FileName);
+                    if (model.ExcelFile.Length > QuestionImportLimits.MaxUploadBytes)
+                    {
+                        ModelState.AddModelError(nameof(model.ExcelFile),
+                            $"File Excel không được vượt quá {QuestionImportLimits.MaxUploadBytes / 1024 / 1024} MB.");
+                        return View("~/Views/Questions/Import.cshtml", BuildInputModel(deck, model.RawText));
+                    }
+
                     if (!model.ExcelFile.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
                     {
                         ModelState.AddModelError(nameof(model.ExcelFile), "Chỉ hỗ trợ file .xlsx.");
@@ -60,10 +76,15 @@ namespace QuizManagement.Controllers
 
                     using var stream = model.ExcelFile.OpenReadStream();
                     preview = _questionImportService.ParseExcel(stream);
-                    sourceName = model.ExcelFile.FileName;
                 }
                 else if (!string.IsNullOrWhiteSpace(model.RawText))
                 {
+                    if (model.RawText.Length > QuestionImportLimits.MaxTextCharacters)
+                    {
+                        ModelState.AddModelError(nameof(model.RawText), "Nội dung text vượt quá giới hạn cho phép.");
+                        return View("~/Views/Questions/Import.cshtml", BuildInputModel(deck));
+                    }
+
                     preview = _questionImportService.ParseText(model.RawText);
                 }
                 else
@@ -74,7 +95,12 @@ namespace QuizManagement.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Không đọc được dữ liệu import: {ex.Message}");
+                _logger.LogWarning(ex,
+                    "Question import preview was rejected for deck {DeckId} and source {SourceName}.",
+                    deck.Id,
+                    sourceName);
+                ModelState.AddModelError(string.Empty,
+                    "Không đọc được dữ liệu import. Vui lòng kiểm tra định dạng và giới hạn file.");
                 return View("~/Views/Questions/Import.cshtml", BuildInputModel(deck, model.RawText));
             }
 
@@ -84,6 +110,11 @@ namespace QuizManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(QuestionImportLimits.MaxRequestBytes)]
+        [RequestFormLimits(
+            MultipartBodyLengthLimit = QuestionImportLimits.MaxRequestBytes,
+            ValueLengthLimit = QuestionImportLimits.MaxCellCharacters,
+            ValueCountLimit = QuestionImportLimits.MaxFormValues)]
         public IActionResult Commit(QuestionImportPreviewViewModel model)
         {
             var deck = _deckService.GetDeckById(model.DeckId, CurrentUserId(), IsAdmin());
@@ -92,7 +123,21 @@ namespace QuizManagement.Controllers
                 return NotFound();
             }
 
+            if (model.ValidRows.Count > QuestionImportLimits.MaxRows)
+            {
+                ModelState.AddModelError(string.Empty,
+                    $"Chỉ hỗ trợ tối đa {QuestionImportLimits.MaxRows:N0} dòng mỗi lần import.");
+                return View("~/Views/Questions/ImportPreview.cshtml", model);
+            }
+
             var validation = _questionImportService.ValidateRows(model.ValidRows.Select(ToServiceRow));
+            if (validation.Errors.Count > 0)
+            {
+                var previewModel = BuildPreviewModel(deck, validation, model.SourceName);
+                ModelState.AddModelError(string.Empty, "Dữ liệu import còn lỗi. Không có câu hỏi nào được lưu.");
+                return View("~/Views/Questions/ImportPreview.cshtml", previewModel);
+            }
+
             if (validation.ValidRows.Count == 0)
             {
                 var previewModel = BuildPreviewModel(deck, validation, model.SourceName);
@@ -100,23 +145,20 @@ namespace QuizManagement.Controllers
                 return View("~/Views/Questions/ImportPreview.cshtml", previewModel);
             }
 
-            foreach (var row in validation.ValidRows)
+            _questionService.AddQuestions(validation.ValidRows.Select(row => new Question
             {
-                _questionService.AddQuestion(new Question
+                DeckId = deck.Id,
+                Content = row.Content,
+                Explanation = row.Explanation,
+                QuestionType = row.QuestionType,
+                CreatedBy = User.Identity?.Name,
+                UpdatedBy = User.Identity?.Name,
+                Answers = row.Answers.Select(answer => new Answer
                 {
-                    DeckId = deck.Id,
-                    Content = row.Content,
-                    Explanation = row.Explanation,
-                    QuestionType = row.QuestionType,
-                    CreatedBy = User.Identity?.Name,
-                    UpdatedBy = User.Identity?.Name,
-                    Answers = row.Answers.Select(answer => new Answer
-                    {
-                        Content = answer.Content,
-                        IsCorrect = answer.IsCorrect
-                    }).ToList()
-                });
-            }
+                    Content = answer.Content,
+                    IsCorrect = answer.IsCorrect
+                }).ToList()
+            }));
 
             TempData["SuccessMessage"] = $"Đã import {validation.ValidRows.Count} câu hỏi.";
             return RedirectToAction("Index", "Questions", new { deckId = deck.Id });

@@ -11,6 +11,11 @@
     <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@Model.DeckId" class="btn btn-outline-secondary">Quay lại</a>
 </div>
 
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
+
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card">

@@ -23,20 +23,18 @@ namespace Services
         public (int subjects, int decks, int questions, int testHistories) GetUserStats(string userId)
             => _repository.GetUserStats(userId);
 
-        public int CountActiveAdmins() => _repository.CountActiveAdmins();
+        public AdminMutationResult ChangeRole(string userId, string newRole)
+            => _repository.UpdateUserAccess(
+                userId,
+                newRole,
+                isDisabled: null,
+                Guid.NewGuid().ToString());
 
-        public void ChangeRole(User user, string newRole)
-        {
-            user.Role = newRole;
-            user.SecurityStamp = Guid.NewGuid().ToString();
-            _repository.UpdateUser(user);
-        }
-
-        public void SetDisabled(User user, bool disabled)
-        {
-            user.IsDisabled = disabled;
-            user.SecurityStamp = Guid.NewGuid().ToString();
-            _repository.UpdateUser(user);
-        }
+        public AdminMutationResult SetDisabled(string userId, bool disabled)
+            => _repository.UpdateUserAccess(
+                userId,
+                newRole: null,
+                disabled,
+                Guid.NewGuid().ToString());
     }
 }

@@ -1,4 +1,5 @@
 using BusinessObjects;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +25,6 @@ namespace DataAccessObjects
                     return instance;
                 }
             }
-        }
-
-        public IEnumerable<Subject> GetSubjectsByUserId(QuizManagementDbContext context, string userId)
-        {
-            return context.Subjects
-                .Where(s => s.UserId == userId)
-                .OrderBy(s => s.Name)
-                .ToList();
         }
 
         public IEnumerable<Subject> GetAllSubjects(QuizManagementDbContext context)
@@ -78,19 +71,32 @@ namespace DataAccessObjects
 
         public void DeleteSubject(QuizManagementDbContext context, Subject subject)
         {
-            subject.IsDeleted = true;
-            subject.UpdatedAt = DateTime.UtcNow;
+            var decks = context.Decks
+                .IgnoreQueryFilters()
+                .Where(deck => deck.SubjectId == subject.Id)
+                .ToList();
+            var deckIds = decks.Select(deck => deck.Id).ToList();
+            var questions = deckIds.Count == 0
+                ? new List<Question>()
+                : context.Questions
+                    .IgnoreQueryFilters()
+                    .Where(question => deckIds.Contains(question.DeckId))
+                    .ToList();
+            var now = DateTime.UtcNow;
 
-            foreach (var deck in context.Decks.Where(d => d.SubjectId == subject.Id))
+            subject.IsDeleted = true;
+            subject.UpdatedAt = now;
+
+            foreach (var deck in decks.Where(deck => !deck.IsDeleted))
             {
                 deck.IsDeleted = true;
-                deck.UpdatedAt = DateTime.UtcNow;
+                deck.UpdatedAt = now;
+            }
 
-                foreach (var question in context.Questions.Where(q => q.DeckId == deck.Id))
-                {
-                    question.IsDeleted = true;
-                    question.UpdatedAt = DateTime.UtcNow;
-                }
+            foreach (var question in questions.Where(question => !question.IsDeleted))
+            {
+                question.IsDeleted = true;
+                question.UpdatedAt = now;
             }
 
             context.Subjects.Update(subject);

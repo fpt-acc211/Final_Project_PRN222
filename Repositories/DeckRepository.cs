@@ -13,9 +13,6 @@ namespace Repositories
             _context = context;
         }
 
-        public IEnumerable<Deck> GetDecksBySubject(int subjectId, string userId)
-            => DeckDAO.Instance.GetDecksBySubject(_context, subjectId, userId);
-
         public IEnumerable<Deck> GetDecksBySubjectForStudy(int subjectId)
             => DeckDAO.Instance.GetDecksBySubjectForStudy(_context, subjectId);
 

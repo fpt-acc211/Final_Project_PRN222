@@ -9,6 +9,9 @@ namespace QuizManagement.ViewModels.QuestionReports
         public string QuestionContent { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng chọn lý do báo cáo.")]
+        [StringLength(100, ErrorMessage = "Lý do báo cáo tối đa 100 ký tự.")]
+        [RegularExpression("^(WrongAnswer|UnclearQuestion|DuplicateQuestion|Other)$",
+            ErrorMessage = "Lý do báo cáo không hợp lệ.")]
         [Display(Name = "Lý do")]
         public string Reason { get; set; } = string.Empty;
 

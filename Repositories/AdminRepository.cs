@@ -24,10 +24,16 @@ namespace Repositories
         public (int subjects, int decks, int questions, int testHistories) GetUserStats(string userId)
             => AdminDAO.Instance.GetUserStats(_context, userId);
 
-        public int CountActiveAdmins()
-            => AdminDAO.Instance.CountActiveAdmins(_context);
-
-        public void UpdateUser(User user)
-            => AdminDAO.Instance.UpdateUser(_context, user);
+        public AdminMutationResult UpdateUserAccess(
+            string userId,
+            string? newRole,
+            bool? isDisabled,
+            string securityStamp)
+            => AdminDAO.Instance.UpdateUserAccess(
+                _context,
+                userId,
+                newRole,
+                isDisabled,
+                securityStamp);
     }
 }

@@ -8,7 +8,10 @@ namespace Repositories
         List<User> GetAllUsers(string? search, string? roleFilter);
         User? GetUserById(string id);
         (int subjects, int decks, int questions, int testHistories) GetUserStats(string userId);
-        int CountActiveAdmins();
-        void UpdateUser(User user);
+        AdminMutationResult UpdateUserAccess(
+            string userId,
+            string? newRole,
+            bool? isDisabled,
+            string securityStamp);
     }
 }

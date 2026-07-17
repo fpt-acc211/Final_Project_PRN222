@@ -15,7 +15,6 @@ namespace Services
         }
 
         public IEnumerable<Subject> GetAllSubjects() => _repository.GetAllSubjects();
-        public IEnumerable<Subject> GetSubjectsByUserId(string userId) => _repository.GetSubjectsByUserId(userId);
         public Subject? GetSubjectForStudy(int id) => _repository.GetSubjectForStudy(id);
         public Subject? GetSubjectById(int id, string userId, bool allowAll = false)
             => _repository.GetSubjectById(id, userId, allowAll);

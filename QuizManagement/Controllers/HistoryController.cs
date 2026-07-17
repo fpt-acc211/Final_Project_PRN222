@@ -20,10 +20,14 @@ namespace QuizManagement.Controllers
         /// <summary>
         /// GET: Danh sách lịch sử làm bài của user hiện tại
         /// </summary>
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            var histories = _quizService.GetTestHistoriesByUser(CurrentUserId());
-            return View(histories);
+            const int pageSize = 50;
+            var result = await _quizService.GetTestHistoryPageAsync(CurrentUserId(), page, pageSize);
+            ViewBag.Page = result.Page;
+            ViewBag.PageSize = result.PageSize;
+            ViewBag.TotalCount = result.TotalCount;
+            return View(result.Items);
         }
 
         /// <summary>
@@ -37,57 +41,8 @@ namespace QuizManagement.Controllers
                 return NotFound();
             }
 
-            // Tái sử dụng logic build result từ QuizController
-            var resultModel = BuildResultViewModel(history);
+            var resultModel = QuizResultViewModel.FromHistory(history);
             return View(resultModel);
-        }
-
-        private static QuizResultViewModel BuildResultViewModel(TestHistory history)
-        {
-            var questionGroups = history.TestResultDetails
-                .GroupBy(d => d.QuestionId)
-                .ToList();
-
-            var questionResults = questionGroups.Select(g =>
-            {
-                var firstDetail = g.First();
-                var question = firstDetail.Question;
-                var selectedAnswerIds = g
-                    .Where(d => d.SelectedAnswerId.HasValue)
-                    .Select(d => d.SelectedAnswerId!.Value)
-                    .ToHashSet();
-
-                return new QuizResultQuestionViewModel
-                {
-                    QuestionId = question.Id,
-                    Content = question.Content,
-                    Explanation = question.Explanation,
-                    QuestionType = question.QuestionType,
-                    IsCorrect = firstDetail.IsCorrect,
-                    Answers = question.Answers
-                        .OrderBy(a => a.Id)
-                        .Select(a => new QuizResultAnswerViewModel
-                        {
-                            AnswerId = a.Id,
-                            Content = a.Content,
-                            IsCorrectAnswer = a.IsCorrect,
-                            WasSelected = selectedAnswerIds.Contains(a.Id)
-                        }).ToList()
-                };
-            }).ToList();
-
-            return new QuizResultViewModel
-            {
-                TestHistoryId = history.Id,
-                DeckName = history.Deck.Name,
-                SubjectName = history.Deck.Subject.Name,
-                Score = history.Score,
-                Percentage = history.Percentage,
-                CorrectCount = questionResults.Count(q => q.IsCorrect),
-                TotalCount = questionResults.Count,
-                CreatedAt = history.CreatedAt,
-                Questions = questionResults
-            };
         }
 
         private string CurrentUserId()

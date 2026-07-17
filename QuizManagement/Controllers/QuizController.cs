@@ -12,8 +12,6 @@ namespace QuizManagement.Controllers
     [Authorize(Policy = "StudyContent")]
     public class QuizController : Controller
     {
-        private static readonly TimeSpan QuizAttemptLifetime = TimeSpan.FromHours(8);
-
         private readonly IDeckService _deckService;
         private readonly IQuizService _quizService;
         private readonly IDataProtector _quizAttemptProtector;
@@ -25,7 +23,7 @@ namespace QuizManagement.Controllers
         {
             _deckService = deckService;
             _quizService = quizService;
-            _quizAttemptProtector = dataProtectionProvider.CreateProtector("QuizManagement.QuizAttempt.v1");
+            _quizAttemptProtector = dataProtectionProvider.CreateProtector("QuizManagement.QuizAttempt.v2");
         }
 
         public IActionResult Config(int deckId)
@@ -68,6 +66,14 @@ namespace QuizManagement.Controllers
             config.AvailableQuestionCount = availableCount;
             config.DeckName = deck.Name;
             config.SubjectName = deck.Subject.Name;
+            config.TimeLimitMinutes = deck.TimeLimitMinutes;
+
+            if (deck.TimeLimitMinutes is < 0 or > 180)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Cấu hình thời gian của bộ đề không hợp lệ. Vui lòng liên hệ người quản lý.");
+                return View("Config", config);
+            }
 
             if (config.QuestionCount < 1 || config.QuestionCount > availableCount)
             {
@@ -83,14 +89,58 @@ namespace QuizManagement.Controllers
 
             var questions = _quizService.GetQuestionsForQuiz(config.DeckId, config.QuestionCount);
             var questionIds = questions.Select(q => q.Id).ToList();
+            if (questionIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Bộ đề hiện không còn câu hỏi để làm bài.";
+                return RedirectToAction(nameof(Config), new { deckId = config.DeckId });
+            }
+
+            var attempt = _quizService.StartQuizAttempt(
+                config.DeckId,
+                CurrentUserId(),
+                questionIds,
+                deck.TimeLimitMinutes);
+
+            return RedirectToAction(nameof(Take), new
+            {
+                deckId = config.DeckId,
+                attemptId = attempt.Id
+            });
+        }
+
+        [HttpGet]
+        public IActionResult Take(int deckId, Guid attemptId)
+        {
+            var deck = _deckService.GetDeckForStudy(deckId);
+            if (deck is null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = CurrentUserId();
+            var attempt = attemptId == Guid.Empty
+                ? null
+                : _quizService.GetValidQuizAttempt(attemptId, deckId, currentUserId);
+            if (attempt is null)
+            {
+                TempData["ErrorMessage"] = "Phiên làm bài không hợp lệ hoặc đã hết hạn. Vui lòng bắt đầu lại bài quiz.";
+                return RedirectToAction(nameof(Config), new { deckId });
+            }
+
+            var questions = _quizService.GetQuestionsForAttempt(deckId, attempt.QuestionIds);
+            if (questions.Count != attempt.QuestionIds.Count)
+            {
+                TempData["ErrorMessage"] = "Bài quiz đã thay đổi và không thể tiếp tục. Vui lòng bắt đầu lại.";
+                return RedirectToAction(nameof(Config), new { deckId });
+            }
 
             var model = new QuizTakeViewModel
             {
-                DeckId = config.DeckId,
+                DeckId = deckId,
                 DeckName = deck.Name,
                 SubjectName = deck.Subject.Name,
-                AttemptToken = ProtectQuizAttempt(config.DeckId, CurrentUserId(), questionIds),
-                TimeLimitSeconds = deck.TimeLimitMinutes > 0 ? deck.TimeLimitMinutes * 60 : 0,
+                AttemptToken = ProtectQuizAttempt(attempt.Id, deckId, currentUserId),
+                TimeRemainingSeconds = attempt.RemainingSeconds,
                 Questions = questions.Select(q => new QuizQuestionViewModel
                 {
                     QuestionId = q.Id,
@@ -119,7 +169,10 @@ namespace QuizManagement.Controllers
 
             var currentUserId = CurrentUserId();
             var attempt = ReadQuizAttempt(model.AttemptToken);
-            if (attempt is null || !IsValidQuizAttempt(attempt, model.DeckId, currentUserId))
+            if (attempt is null
+                || attempt.AttemptId == Guid.Empty
+                || attempt.DeckId != model.DeckId
+                || attempt.UserId != currentUserId)
             {
                 TempData["ErrorMessage"] = "Phiên làm bài không hợp lệ hoặc đã hết hạn. Vui lòng bắt đầu lại bài quiz.";
                 return RedirectToAction(nameof(Config), new { deckId = model.DeckId });
@@ -131,11 +184,16 @@ namespace QuizManagement.Controllers
                     group => group.Key,
                     group => group.SelectMany(GetSelectedAnswerIds).Distinct().ToList());
 
-            var history = _quizService.GradeAndSaveQuiz(
+            var history = _quizService.SubmitQuizAttempt(
+                attempt.AttemptId,
                 model.DeckId,
                 currentUserId,
-                attempt.QuestionIds,
                 selectedAnswersByQuestion);
+            if (history is null)
+            {
+                TempData["ErrorMessage"] = "Phiên làm bài không hợp lệ hoặc đã hết hạn. Vui lòng bắt đầu lại bài quiz.";
+                return RedirectToAction(nameof(Config), new { deckId = model.DeckId });
+            }
 
             TempData["SuccessMessage"] = "Đã nộp bài thành công!";
             return RedirectToAction(nameof(Result), new { id = history.Id });
@@ -149,66 +207,17 @@ namespace QuizManagement.Controllers
                 return NotFound();
             }
 
-            var resultModel = BuildResultViewModel(history);
+            var resultModel = QuizResultViewModel.FromHistory(history);
             return View(resultModel);
         }
 
-        private static QuizResultViewModel BuildResultViewModel(TestHistory history)
-        {
-            var questionGroups = history.TestResultDetails
-                .GroupBy(d => d.QuestionId)
-                .ToList();
-
-            var questionResults = questionGroups.Select(g =>
-            {
-                var firstDetail = g.First();
-                var question = firstDetail.Question;
-                var selectedAnswerIds = g
-                    .Where(d => d.SelectedAnswerId.HasValue)
-                    .Select(d => d.SelectedAnswerId!.Value)
-                    .ToHashSet();
-
-                return new QuizResultQuestionViewModel
-                {
-                    QuestionId = question.Id,
-                    Content = question.Content,
-                    Explanation = question.Explanation,
-                    QuestionType = question.QuestionType,
-                    IsCorrect = firstDetail.IsCorrect,
-                    Answers = question.Answers
-                        .OrderBy(a => a.Id)
-                        .Select(a => new QuizResultAnswerViewModel
-                        {
-                            AnswerId = a.Id,
-                            Content = a.Content,
-                            IsCorrectAnswer = a.IsCorrect,
-                            WasSelected = selectedAnswerIds.Contains(a.Id)
-                        }).ToList()
-                };
-            }).ToList();
-
-            return new QuizResultViewModel
-            {
-                TestHistoryId = history.Id,
-                DeckName = history.Deck.Name,
-                SubjectName = history.Deck.Subject.Name,
-                Score = history.Score,
-                Percentage = history.Percentage,
-                CorrectCount = questionResults.Count(q => q.IsCorrect),
-                TotalCount = questionResults.Count,
-                CreatedAt = history.CreatedAt,
-                Questions = questionResults
-            };
-        }
-
-        private string ProtectQuizAttempt(int deckId, string userId, List<int> questionIds)
+        private string ProtectQuizAttempt(Guid attemptId, int deckId, string userId)
         {
             var payload = new QuizAttemptPayload
             {
+                AttemptId = attemptId,
                 DeckId = deckId,
-                UserId = userId,
-                QuestionIds = questionIds,
-                IssuedAtUtc = DateTimeOffset.UtcNow
+                UserId = userId
             };
 
             return _quizAttemptProtector.Protect(JsonSerializer.Serialize(payload));
@@ -232,15 +241,6 @@ namespace QuizManagement.Controllers
             }
         }
 
-        private static bool IsValidQuizAttempt(QuizAttemptPayload attempt, int deckId, string userId)
-        {
-            return attempt.DeckId == deckId
-                && attempt.UserId == userId
-                && attempt.QuestionIds.Count > 0
-                && attempt.QuestionIds.Count <= 500
-                && DateTimeOffset.UtcNow - attempt.IssuedAtUtc <= QuizAttemptLifetime;
-        }
-
         private static IEnumerable<int> GetSelectedAnswerIds(QuizQuestionSubmitItem question)
         {
             if (question.SelectedAnswerId.HasValue)
@@ -262,13 +262,11 @@ namespace QuizManagement.Controllers
 
         private sealed class QuizAttemptPayload
         {
+            public Guid AttemptId { get; set; }
+
             public int DeckId { get; set; }
 
             public string UserId { get; set; } = string.Empty;
-
-            public List<int> QuestionIds { get; set; } = new();
-
-            public DateTimeOffset IssuedAtUtc { get; set; }
         }
     }
 }

@@ -3,6 +3,10 @@
     ViewData["Title"] = "Báo cáo câu hỏi";
     var pending = Model.Where(r => !r.IsResolved).ToList();
     var resolved = Model.Where(r => r.IsResolved).ToList();
+    var page = (int)(ViewBag.Page ?? 1);
+    var pageSize = (int)(ViewBag.PageSize ?? 50);
+    var totalCount = (int)(ViewBag.TotalCount ?? Model.Count);
+    var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -66,7 +70,7 @@ else
                                         <span style="white-space:pre-wrap;">@item.Note</span>
                                     </td>
                                     <td class="text-center" style="font-size:.8rem;color:var(--text-muted);">
-                                        @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")
+                                        @VietnamTime.FromUtc(item.CreatedAt).ToString("dd/MM/yyyy")
                                     </td>
                                     <td class="text-center">
                                         <form asp-action="Resolve" asp-route-id="@item.Id" method="post" class="d-inline">
@@ -115,7 +119,7 @@ else
                                         </td>
                                         <td style="font-size:.8rem;">@item.DeckName / @item.SubjectName</td>
                                         <td><span class="badge bg-success">@item.Reason</span></td>
-                                        <td class="text-center" style="font-size:.8rem;">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                        <td class="text-center" style="font-size:.8rem;">@VietnamTime.FromUtc(item.CreatedAt).ToString("dd/MM/yyyy")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -124,5 +128,20 @@ else
                 </div>
             </div>
         </details>
+    }
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Phân trang báo cáo" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(page <= 1 ? "disabled" : null)">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(page - 1)">Trước</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Trang @(page) / @totalPages</span></li>
+                <li class="page-item @(page >= totalPages ? "disabled" : null)">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(page + 1)">Sau</a>
+                </li>
+            </ul>
+        </nav>
     }
 }

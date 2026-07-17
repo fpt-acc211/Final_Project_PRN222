@@ -13,9 +13,6 @@ namespace Repositories
             _context = context;
         }
 
-        public IEnumerable<Question> GetQuestionsByDeck(int deckId, string userId)
-            => QuestionDAO.Instance.GetQuestionsByDeck(_context, deckId, userId);
-
         public IEnumerable<Question> GetQuestionsByDeckForStudy(int deckId)
             => QuestionDAO.Instance.GetQuestionsByDeckForStudy(_context, deckId);
 
@@ -25,8 +22,11 @@ namespace Repositories
         public void AddQuestion(Question question)
             => QuestionDAO.Instance.AddQuestion(_context, question);
 
-        public void UpdateQuestion(Question question)
-            => QuestionDAO.Instance.UpdateQuestion(_context, question);
+        public void AddQuestions(IEnumerable<Question> questions)
+            => QuestionDAO.Instance.AddQuestions(_context, questions);
+
+        public QuestionUpdateResult TryUpdateQuestion(Question question)
+            => QuestionDAO.Instance.TryUpdateQuestion(_context, question);
 
         public void DeleteQuestion(Question question)
             => QuestionDAO.Instance.DeleteQuestion(_context, question);

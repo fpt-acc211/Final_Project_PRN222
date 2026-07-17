@@ -157,7 +157,7 @@
                                         <td>@item.Name</td>
                                         <td class="text-center">@item.Attempts</td>
                                         <td class="text-center">@item.AveragePercentage.ToString("0.#")%</td>
-                                        <td class="text-center">@item.LastAttemptAt.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                                        <td class="text-center">@VietnamTime.FromUtc(item.LastAttemptAt).ToString("dd/MM HH:mm")</td>
                                     </tr>
                                 }
                             </tbody>

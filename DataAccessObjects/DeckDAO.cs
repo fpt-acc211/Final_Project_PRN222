@@ -27,15 +27,6 @@ namespace DataAccessObjects
             }
         }
 
-        public IEnumerable<Deck> GetDecksBySubject(QuizManagementDbContext context, int subjectId, string userId)
-        {
-            return context.Decks
-                .Include(d => d.Subject)
-                .Where(d => d.SubjectId == subjectId && d.Subject.UserId == userId)
-                .OrderBy(d => d.Name)
-                .ToList();
-        }
-
         public IEnumerable<Deck> GetDecksBySubjectForStudy(
             QuizManagementDbContext context, int subjectId)
         {

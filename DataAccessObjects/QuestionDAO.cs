@@ -27,17 +27,6 @@ namespace DataAccessObjects
             }
         }
 
-        public IEnumerable<Question> GetQuestionsByDeck(QuizManagementDbContext context, int deckId, string userId)
-        {
-            return context.Questions
-                .Include(q => q.Answers)
-                .Include(q => q.Deck)
-                .ThenInclude(d => d.Subject)
-                .Where(q => q.DeckId == deckId && q.Deck.Subject.UserId == userId)
-                .OrderByDescending(q => q.CreatedAt)
-                .ToList();
-        }
-
         public IEnumerable<Question> GetQuestionsByDeckForStudy(
             QuizManagementDbContext context, int deckId)
         {
@@ -61,17 +50,45 @@ namespace DataAccessObjects
         }
 
         public void AddQuestion(QuizManagementDbContext context, Question question)
+            => AddQuestions(context, [question]);
+
+        public void AddQuestions(QuizManagementDbContext context, IEnumerable<Question> questions)
         {
-            question.CreatedAt = DateTime.UtcNow;
-            context.Questions.Add(question);
+            var batch = questions.ToList();
+            var createdAt = DateTime.UtcNow;
+            foreach (var question in batch)
+                question.CreatedAt = createdAt;
+
+            context.Questions.AddRange(batch);
             context.SaveChanges();
         }
 
-        public void UpdateQuestion(QuizManagementDbContext context, Question question)
+        public QuestionUpdateResult TryUpdateQuestion(QuizManagementDbContext context, Question question)
         {
             var existingQuestion = context.Questions
                 .Include(q => q.Answers)
                 .First(q => q.Id == question.Id);
+
+            var incomingAnswers = question.Answers.ToList();
+            var incomingIds = incomingAnswers.Where(a => a.Id > 0).Select(a => a.Id).ToHashSet();
+            var removedAnswers = existingQuestion.Answers.Where(a => !incomingIds.Contains(a.Id)).ToList();
+            var removedIds = removedAnswers.Select(answer => answer.Id).ToList();
+            if (removedIds.Count > 0 && context.TestResultDetails
+                    .Any(detail => detail.SelectedAnswerId.HasValue
+                        && removedIds.Contains(detail.SelectedAnswerId.Value)))
+            {
+                return QuestionUpdateResult.ReferencedAnswer;
+            }
+
+            if (question.RowVersion.Length != 8)
+            {
+                context.ChangeTracker.Clear();
+                return QuestionUpdateResult.ConcurrencyConflict;
+            }
+
+            context.Entry(existingQuestion)
+                .Property(existing => existing.RowVersion)
+                .OriginalValue = question.RowVersion;
 
             existingQuestion.Content = question.Content;
             existingQuestion.Explanation = question.Explanation;
@@ -79,9 +96,6 @@ namespace DataAccessObjects
             existingQuestion.UpdatedAt = DateTime.UtcNow;
             existingQuestion.UpdatedBy = question.UpdatedBy;
 
-            var incomingAnswers = question.Answers.ToList();
-            var incomingIds = incomingAnswers.Where(a => a.Id > 0).Select(a => a.Id).ToHashSet();
-            var removedAnswers = existingQuestion.Answers.Where(a => !incomingIds.Contains(a.Id)).ToList();
             context.Answers.RemoveRange(removedAnswers);
 
             foreach (var incomingAnswer in incomingAnswers)
@@ -102,7 +116,16 @@ namespace DataAccessObjects
                 }
             }
 
-            context.SaveChanges();
+            try
+            {
+                context.SaveChanges();
+                return QuestionUpdateResult.Updated;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                context.ChangeTracker.Clear();
+                return QuestionUpdateResult.ConcurrencyConflict;
+            }
         }
 
         public void DeleteQuestion(QuizManagementDbContext context, Question question)

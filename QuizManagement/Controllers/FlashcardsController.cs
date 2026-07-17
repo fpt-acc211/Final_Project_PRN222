@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuizManagement.ViewModels.Flashcards;
 using Services;
-using System.Security.Claims;
 
 namespace QuizManagement.Controllers
 {
@@ -57,10 +56,5 @@ namespace QuizManagement.Controllers
             return View(model);
         }
 
-        private string CurrentUserId()
-        {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? throw new InvalidOperationException("Không tìm thấy UserId trong phiên đăng nhập.");
-        }
     }
 }

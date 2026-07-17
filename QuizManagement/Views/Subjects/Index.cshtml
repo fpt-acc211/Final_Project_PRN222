@@ -42,7 +42,7 @@ else
                 <div class="item-card__body">
                     <a asp-controller="Decks" asp-action="Index" asp-route-subjectId="@subject.Id"
                        class="item-card__title">@subject.Name</a>
-                    <p class="item-card__meta">Tạo lúc @subject.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    <p class="item-card__meta">Tạo lúc @VietnamTime.FromUtc(subject.CreatedAt).ToString("dd/MM/yyyy")</p>
                 </div>
                 <div class="item-card__actions">
                     <a asp-controller="Decks" asp-action="Index" asp-route-subjectId="@subject.Id"

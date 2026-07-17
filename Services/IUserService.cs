@@ -7,7 +7,7 @@ namespace Services
         User? GetByEmail(string email);
         User? GetByUsername(string username);
         User? GetById(string id);
-        void CreateUser(User user);
+        bool TryCreateUser(User user);
         void UpdateProfile(User user);
         void ChangePassword(User user, string newPasswordHash);
     }

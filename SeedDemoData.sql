@@ -1,7 +1,17 @@
+-- WARNING: ISOLATED DEMO DATABASES ONLY.
+-- This script creates accounts with public credentials and replaces all data owned by fixed seed identities.
+-- Never run it against production or a database containing real user data.
+-- Explicit same-session opt-in required before every run:
+-- EXEC sys.sp_set_session_context @key = N'QuizManagement.AllowDemoSeed', @value = 1;
+
 USE QuizManagementDB;
 GO
 
+IF ISNULL(TRY_CONVERT(BIT, SESSION_CONTEXT(N'QuizManagement.AllowDemoSeed')), 0) <> 1
+    THROW 51019, 'Demo seed blocked. Set QuizManagement.AllowDemoSeed=1 only in an isolated demo database.', 1;
+
 SET XACT_ABORT ON;
+BEGIN TRY
 BEGIN TRANSACTION;
 
 DECLARE @SeedBy NVARCHAR(256) = N'Naams2k10fpt';
@@ -13,26 +23,65 @@ DECLARE @SeedUserIds TABLE (Id NVARCHAR(450) PRIMARY KEY);
 INSERT INTO @SeedUserIds (Id)
 VALUES (@AdminId), (@MentorId), (@UserId);
 
+DECLARE @SeedEmails TABLE (Email NVARCHAR(256) PRIMARY KEY);
+INSERT INTO @SeedEmails (Email)
+VALUES
+    (N'admin.demo@quiz.local'),
+    (N'mentor.demo@quiz.local'),
+    (N'user.demo@quiz.local'),
+    (N'unknown.demo@quiz.local');
+
+DECLARE @SeedDeckIds TABLE (Id INT PRIMARY KEY);
+INSERT INTO @SeedDeckIds (Id)
+SELECT d.Id
+FROM Decks d
+JOIN Subjects s ON s.Id = d.SubjectId
+WHERE s.UserId IN (SELECT Id FROM @SeedUserIds);
+
+DECLARE @SeedQuestionIds TABLE (Id INT PRIMARY KEY);
+INSERT INTO @SeedQuestionIds (Id)
+SELECT q.Id
+FROM Questions q
+WHERE q.DeckId IN (SELECT Id FROM @SeedDeckIds);
+
+DECLARE @SeedAnswerIds TABLE (Id INT PRIMARY KEY);
+INSERT INTO @SeedAnswerIds (Id)
+SELECT a.Id
+FROM Answers a
+WHERE a.QuestionId IN (SELECT Id FROM @SeedQuestionIds);
+
+DECLARE @SeedQuizAttemptIds TABLE (Id UNIQUEIDENTIFIER PRIMARY KEY);
+INSERT INTO @SeedQuizAttemptIds (Id)
+SELECT qa.Id
+FROM QuizAttempts qa
+WHERE qa.UserId IN (SELECT Id FROM @SeedUserIds)
+   OR qa.DeckId IN (SELECT Id FROM @SeedDeckIds);
+
+DELETE FROM QuestionReports
+WHERE UserId IN (SELECT Id FROM @SeedUserIds)
+   OR QuestionId IN (SELECT Id FROM @SeedQuestionIds);
+
+DELETE FROM LoginAttempts
+WHERE UserId IN (SELECT Id FROM @SeedUserIds)
+   OR Email IN (SELECT Email FROM @SeedEmails);
+
 DELETE trd
 FROM TestResultDetails trd
 JOIN TestHistories th ON th.Id = trd.TestHistoryId
 WHERE th.UserId IN (SELECT Id FROM @SeedUserIds)
-   OR th.DeckId IN (
-        SELECT d.Id
-        FROM Decks d
-        JOIN Subjects s ON s.Id = d.SubjectId
-        WHERE s.UserId IN (SELECT Id FROM @SeedUserIds)
-   );
+   OR th.DeckId IN (SELECT Id FROM @SeedDeckIds)
+   OR th.QuizAttemptId IN (SELECT Id FROM @SeedQuizAttemptIds)
+   OR trd.QuestionId IN (SELECT Id FROM @SeedQuestionIds)
+   OR trd.SelectedAnswerId IN (SELECT Id FROM @SeedAnswerIds);
 
 DELETE th
 FROM TestHistories th
 WHERE th.UserId IN (SELECT Id FROM @SeedUserIds)
-   OR th.DeckId IN (
-        SELECT d.Id
-        FROM Decks d
-        JOIN Subjects s ON s.Id = d.SubjectId
-        WHERE s.UserId IN (SELECT Id FROM @SeedUserIds)
-   );
+   OR th.DeckId IN (SELECT Id FROM @SeedDeckIds)
+   OR th.QuizAttemptId IN (SELECT Id FROM @SeedQuizAttemptIds);
+
+DELETE FROM QuizAttempts
+WHERE Id IN (SELECT Id FROM @SeedQuizAttemptIds);
 
 DELETE a
 FROM Answers a
@@ -117,18 +166,18 @@ SET @SubjectAspNetId = SCOPE_IDENTITY();
 
 DECLARE @DeckMap TABLE (DeckKey NVARCHAR(50) PRIMARY KEY, Id INT NOT NULL);
 
-INSERT INTO Decks (SubjectId, Name, CreatedBy, CreatedAt)
-VALUES (@SubjectCSharpId, N'C# and OOP Basics', @SeedBy, SYSUTCDATETIME());
+INSERT INTO Decks (SubjectId, Name, TimeLimitMinutes, CreatedBy, CreatedAt)
+VALUES (@SubjectCSharpId, N'C# and OOP Basics', 20, @SeedBy, SYSUTCDATETIME());
 SET @DeckCSharpId = SCOPE_IDENTITY();
 INSERT INTO @DeckMap (DeckKey, Id) VALUES (N'csharp', @DeckCSharpId);
 
-INSERT INTO Decks (SubjectId, Name, CreatedBy, CreatedAt)
-VALUES (@SubjectAspNetId, N'ASP.NET Core MVC', @SeedBy, SYSUTCDATETIME());
+INSERT INTO Decks (SubjectId, Name, TimeLimitMinutes, CreatedBy, CreatedAt)
+VALUES (@SubjectAspNetId, N'ASP.NET Core MVC', 30, @SeedBy, SYSUTCDATETIME());
 SET @DeckMvcId = SCOPE_IDENTITY();
 INSERT INTO @DeckMap (DeckKey, Id) VALUES (N'mvc', @DeckMvcId);
 
-INSERT INTO Decks (SubjectId, Name, CreatedBy, CreatedAt)
-VALUES (@SubjectAspNetId, N'Entity Framework Core', @SeedBy, SYSUTCDATETIME());
+INSERT INTO Decks (SubjectId, Name, TimeLimitMinutes, CreatedBy, CreatedAt)
+VALUES (@SubjectAspNetId, N'Entity Framework Core', 0, @SeedBy, SYSUTCDATETIME());
 SET @DeckEfId = SCOPE_IDENTITY();
 INSERT INTO @DeckMap (DeckKey, Id) VALUES (N'efcore', @DeckEfId);
 
@@ -279,36 +328,136 @@ SELECT qm.Id, a.Content, a.IsCorrect
 FROM @AnswerSeeds a
 JOIN @QuestionMap qm ON qm.QuestionCode = a.QuestionCode;
 
-DECLARE @HistoryId INT;
-
-INSERT INTO TestHistories (UserId, DeckId, Score, Percentage, CreatedAt)
-VALUES (@UserId, @DeckMvcId, 8.00, 80.00, DATEADD(DAY, -1, SYSUTCDATETIME()));
-SET @HistoryId = SCOPE_IDENTITY();
-
 DECLARE @Mvc01Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'MVC01');
 DECLARE @Mvc02Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'MVC02');
 DECLARE @Mvc03Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'MVC03');
 DECLARE @Mvc04Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'MVC04');
 DECLARE @Mvc05Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'MVC05');
+DECLARE @Ef03Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'EF03');
+DECLARE @Cs03Id INT = (SELECT Id FROM @QuestionMap WHERE QuestionCode = N'CS03');
 
-INSERT INTO TestResultDetails (TestHistoryId, QuestionId, SelectedAnswerId, IsCorrect)
-SELECT @HistoryId, qm.Id, a.Id, 1
+DECLARE @SelectedAnswers TABLE
+(
+    QuestionId INT NOT NULL,
+    AnswerId INT NOT NULL,
+    PRIMARY KEY (QuestionId, AnswerId)
+);
+
+INSERT INTO @SelectedAnswers (QuestionId, AnswerId)
+SELECT qm.Id, a.Id
 FROM @QuestionMap qm
 JOIN Answers a ON a.QuestionId = qm.Id AND a.IsCorrect = 1
 WHERE qm.QuestionCode IN (N'MVC01', N'MVC02', N'MVC03');
 
-INSERT INTO TestResultDetails (TestHistoryId, QuestionId, SelectedAnswerId, IsCorrect)
-SELECT @HistoryId, @Mvc04Id, a.Id, 1
+INSERT INTO @SelectedAnswers (QuestionId, AnswerId)
+SELECT @Mvc04Id, a.Id
 FROM Answers a
 WHERE a.QuestionId = @Mvc04Id AND a.IsCorrect = 1;
 
-INSERT INTO TestResultDetails (TestHistoryId, QuestionId, SelectedAnswerId, IsCorrect)
-SELECT TOP (1) @HistoryId, @Mvc05Id, a.Id, 0
+INSERT INTO @SelectedAnswers (QuestionId, AnswerId)
+SELECT TOP (1) @Mvc05Id, a.Id
 FROM Answers a
 WHERE a.QuestionId = @Mvc05Id AND a.IsCorrect = 0
 ORDER BY a.Id;
 
+DECLARE @QuestionIdsJson NVARCHAR(MAX) =
+(
+    SELECT N'[' + STRING_AGG(CONVERT(NVARCHAR(MAX), Id), N',')
+        WITHIN GROUP (ORDER BY QuestionCode) + N']'
+    FROM @QuestionMap
+    WHERE QuestionCode IN (N'MVC01', N'MVC02', N'MVC03', N'MVC04', N'MVC05')
+);
+
+DECLARE @AttemptId UNIQUEIDENTIFIER = NEWID();
+DECLARE @AttemptStartedAt DATETIMEOFFSET(7) = DATEADD(DAY, -1, SYSDATETIMEOFFSET());
+DECLARE @AttemptCompletedAt DATETIMEOFFSET(7) = DATEADD(MINUTE, 4, @AttemptStartedAt);
+
+INSERT INTO QuizAttempts
+    (Id, UserId, DeckId, QuestionIdsJson, TimeLimitMinutes, StartedAtUtc, ExpiresAtUtc, CompletedAtUtc)
+VALUES
+    (@AttemptId, @UserId, @DeckMvcId, @QuestionIdsJson, 30,
+     @AttemptStartedAt, DATEADD(MINUTE, 30, @AttemptStartedAt), @AttemptCompletedAt);
+
+DECLARE @ResultSnapshotJson NVARCHAR(MAX) =
+(
+    SELECT
+        d.Name AS DeckName,
+        s.Name AS SubjectName,
+        JSON_QUERY((
+            SELECT
+                q.Id AS QuestionId,
+                q.Content,
+                q.Explanation,
+                q.QuestionType,
+                CAST(CASE WHEN qm.QuestionCode = N'MVC05' THEN 0 ELSE 1 END AS BIT) AS IsCorrect,
+                JSON_QUERY((
+                    SELECT
+                        a.Id AS AnswerId,
+                        a.Content,
+                        CAST(a.IsCorrect AS BIT) AS IsCorrectAnswer,
+                        CAST(CASE WHEN EXISTS (
+                            SELECT 1
+                            FROM @SelectedAnswers selected
+                            WHERE selected.QuestionId = a.QuestionId
+                              AND selected.AnswerId = a.Id
+                        ) THEN 1 ELSE 0 END AS BIT) AS WasSelected
+                    FROM Answers a
+                    WHERE a.QuestionId = q.Id
+                    ORDER BY a.Id
+                    FOR JSON PATH
+                )) AS Answers
+            FROM @QuestionMap qm
+            JOIN Questions q ON q.Id = qm.Id
+            WHERE qm.QuestionCode IN (N'MVC01', N'MVC02', N'MVC03', N'MVC04', N'MVC05')
+            ORDER BY qm.QuestionCode
+            FOR JSON PATH
+        )) AS Questions
+    FROM Decks d
+    JOIN Subjects s ON s.Id = d.SubjectId
+    WHERE d.Id = @DeckMvcId
+    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+);
+
+DECLARE @HistoryId INT;
+
+INSERT INTO TestHistories
+    (UserId, DeckId, QuizAttemptId, ResultSnapshotJson, Score, Percentage, CreatedAt)
+VALUES
+    (@UserId, @DeckMvcId, @AttemptId, @ResultSnapshotJson, 8.00, 80.00,
+     CONVERT(DATETIME2(7), @AttemptCompletedAt));
+SET @HistoryId = SCOPE_IDENTITY();
+
+INSERT INTO TestResultDetails (TestHistoryId, QuestionId, SelectedAnswerId, IsCorrect)
+SELECT
+    @HistoryId,
+    selected.QuestionId,
+    selected.AnswerId,
+    CAST(CASE WHEN selected.QuestionId = @Mvc05Id THEN 0 ELSE 1 END AS BIT)
+FROM @SelectedAnswers selected;
+
+INSERT INTO QuestionReports (QuestionId, UserId, Reason, Note, IsResolved, CreatedAt)
+VALUES
+    (@Ef03Id, @UserId, N'UnclearQuestion', N'Demo báo cáo đang chờ Mentor/Admin xử lý.', 0,
+     DATEADD(HOUR, -12, SYSUTCDATETIME())),
+    (@Cs03Id, @UserId, N'Other', N'Demo báo cáo đã được xử lý.', 1,
+     DATEADD(DAY, -2, SYSUTCDATETIME()));
+
+INSERT INTO LoginAttempts (Email, IpAddress, IsSuccess, UserId, CreatedAt)
+VALUES
+    (N'user.demo@quiz.local', N'127.0.0.1', 1, @UserId, DATEADD(HOUR, -2, SYSUTCDATETIME())),
+    (N'user.demo@quiz.local', N'127.0.0.1', 0, @UserId, DATEADD(HOUR, -3, SYSUTCDATETIME())),
+    (N'unknown.demo@quiz.local', N'127.0.0.2', 0, NULL, DATEADD(HOUR, -4, SYSUTCDATETIME()));
+
 COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF XACT_STATE() <> 0
+        ROLLBACK TRANSACTION;
+    EXEC sys.sp_set_session_context @key = N'QuizManagement.AllowDemoSeed', @value = NULL;
+    THROW;
+END CATCH;
+
+EXEC sys.sp_set_session_context @key = N'QuizManagement.AllowDemoSeed', @value = NULL;
 
 SELECT Username, Email, Role, N'Test@123456' AS DemoPassword
 FROM Users
@@ -326,4 +475,10 @@ SELECT
      JOIN Decks d ON d.Id = q.DeckId
      JOIN Subjects s ON s.Id = d.SubjectId
      WHERE s.UserId = @MentorId) AS QuestionCount;
+
+SELECT
+    (SELECT COUNT(*) FROM QuizAttempts WHERE UserId = @UserId) AS QuizAttemptCount,
+    (SELECT COUNT(*) FROM TestHistories WHERE UserId = @UserId) AS TestHistoryCount,
+    (SELECT COUNT(*) FROM QuestionReports WHERE UserId = @UserId) AS QuestionReportCount,
+    (SELECT COUNT(*) FROM LoginAttempts WHERE Email IN (SELECT Email FROM @SeedEmails)) AS LoginAttemptCount;
 GO

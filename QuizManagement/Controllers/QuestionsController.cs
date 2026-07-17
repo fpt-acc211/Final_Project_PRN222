@@ -99,6 +99,22 @@ namespace QuizManagement.Controllers
             }
 
             model.DeckId = question.DeckId;
+            byte[]? rowVersion = null;
+            try
+            {
+                rowVersion = string.IsNullOrWhiteSpace(model.RowVersion)
+                    ? null
+                    : Convert.FromBase64String(model.RowVersion);
+            }
+            catch (FormatException)
+            {
+                // The generic validation error below avoids exposing concurrency internals.
+            }
+            if (rowVersion is not { Length: 8 })
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Phiên bản câu hỏi không hợp lệ. Vui lòng tải lại trang.");
+            }
             NormalizeAndValidate(model);
             FillDeckInfo(model, question.Deck);
 
@@ -109,7 +125,23 @@ namespace QuizManagement.Controllers
 
             var updatedQuestion = ToQuestion(model, User.Identity?.Name);
             updatedQuestion.Id = id;
-            _questionService.UpdateQuestion(updatedQuestion);
+            updatedQuestion.RowVersion = rowVersion!;
+            var updateResult = _questionService.TryUpdateQuestion(updatedQuestion);
+            if (updateResult != QuestionUpdateResult.Updated)
+            {
+                ModelState.Clear();
+                if (updateResult == QuestionUpdateResult.ReferencedAnswer)
+                {
+                    ModelState.AddModelError(string.Empty,
+                        "Không thể xóa đáp án đã xuất hiện trong lịch sử làm bài. Vui lòng giữ lại đáp án đó.");
+                    return View(ToFormModel(question));
+                }
+
+                ModelState.AddModelError(string.Empty,
+                    "Câu hỏi đã được người khác cập nhật. Dữ liệu mới nhất đã được tải lại; vui lòng kiểm tra và sửa lại.");
+                var latest = _questionService.GetQuestionById(id, CurrentUserId(), IsAdmin());
+                return latest is null ? NotFound() : View(ToFormModel(latest));
+            }
 
             TempData["SuccessMessage"] = "Đã cập nhật câu hỏi.";
             return RedirectToAction(nameof(Index), new { deckId = question.DeckId });
@@ -157,6 +189,7 @@ namespace QuizManagement.Controllers
             var model = new QuestionFormViewModel
             {
                 Id = question.Id,
+                RowVersion = Convert.ToBase64String(question.RowVersion),
                 DeckId = question.DeckId,
                 DeckName = question.Deck.Name,
                 SubjectId = question.Deck.SubjectId,

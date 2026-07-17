@@ -30,7 +30,6 @@
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="QuestionId" />
-                    <input type="hidden" asp-for="QuestionContent" />
                     <input type="hidden" asp-for="TestHistoryId" />
 
                     <div class="mb-3">

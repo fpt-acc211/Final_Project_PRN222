@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using QuizManagement.Infrastructure;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IQuestionReportRepository, QuestionReportRepository>(
 builder.Services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
 
 // 3. Services
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
@@ -47,6 +49,16 @@ builder.Services.AddSingleton<IDeckExportService, DeckExportService>();
 // 4. Infrastructure (web-tier)
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ILoginAttemptService, LoginAttemptService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(
+        AuthenticationRateLimitPolicies.Login,
+        AuthenticationRateLimitPolicies.CreateLoginPartition);
+    options.AddPolicy(
+        AuthenticationRateLimitPolicies.Register,
+        AuthenticationRateLimitPolicies.CreateRegisterPartition);
+});
 
 // 5. Data Protection (tránh mất session khi restart app)
 builder.Services.AddDataProtection()
@@ -71,9 +83,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ViewAnalytics", policy =>
         policy.RequireAuthenticatedUser());
 
-    // TakeQuiz: tất cả người dùng đã đăng nhập
-    options.AddPolicy("TakeQuiz", policy =>
-        policy.RequireAuthenticatedUser());
 });
 
 // 7. Cookie Authentication với SecurityStamp + IsDisabled validation
@@ -133,11 +142,11 @@ if (builder.Configuration.GetValue<bool>("AdminSeed:Enabled"))
     if (string.IsNullOrWhiteSpace(username) ||
         string.IsNullOrWhiteSpace(email) ||
         string.IsNullOrWhiteSpace(password) ||
-        password.Length < 12 ||
+        password.Length is < PasswordPolicy.MinimumLength or > PasswordPolicy.MaximumLength ||
         password == "replace-with-a-strong-password")
     {
         throw new InvalidOperationException(
-            "AdminSeed được bật nhưng Username, Email hoặc Password (tối thiểu 12 ký tự) chưa hợp lệ.");
+            "AdminSeed được bật nhưng Username, Email hoặc Password (15–100 ký tự) chưa hợp lệ.");
     }
 
     try
@@ -184,6 +193,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
