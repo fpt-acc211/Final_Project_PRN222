@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Services
@@ -12,10 +13,15 @@ namespace Services
 
         public QuestionImportPreview ParseText(string text)
         {
+            if (text.Length > QuestionImportLimits.MaxTextCharacters)
+                throw new InvalidDataException("Text import exceeds the supported size.");
+
             var rows = new List<QuestionImportRow>();
             var blocks = Regex.Split(text.Replace("\r\n", "\n").Trim(), @"\n\s*\n")
                 .Where(block => !string.IsNullOrWhiteSpace(block))
                 .ToList();
+            if (blocks.Count > QuestionImportLimits.MaxRows)
+                throw new InvalidDataException("Text import contains too many rows.");
 
             for (var i = 0; i < blocks.Count; i++)
             {
@@ -27,10 +33,23 @@ namespace Services
 
         public QuestionImportPreview ParseExcel(Stream stream)
         {
-            if (stream.CanSeek)
+            using var bufferedStream = stream.CanSeek
+                ? null
+                : CopyToBoundedMemory(stream, QuestionImportLimits.MaxUploadBytes);
+            stream = bufferedStream ?? stream;
+
+            if (stream.Length > QuestionImportLimits.MaxUploadBytes)
+                throw new InvalidDataException("Excel upload exceeds the supported size.");
+
+            stream.Position = 0;
+            Span<byte> signature = stackalloc byte[4];
+            if (stream.Read(signature) != signature.Length ||
+                !signature.SequenceEqual(new byte[] { 0x50, 0x4B, 0x03, 0x04 }))
             {
-                stream.Position = 0;
+                throw new InvalidDataException("The upload is not a valid XLSX ZIP container.");
             }
+
+            stream.Position = 0;
 
             var sheetRows = ReadFirstWorksheet(stream);
             if (sheetRows.Count < 2)
@@ -112,9 +131,14 @@ namespace Services
         public QuestionImportPreview ValidateRows(IEnumerable<QuestionImportRow> rows)
         {
             var preview = new QuestionImportPreview();
+            var rowCount = 0;
 
             foreach (var sourceRow in rows)
             {
+                rowCount++;
+                if (rowCount > QuestionImportLimits.MaxRows)
+                    throw new InvalidDataException("Import contains too many rows.");
+
                 var row = new QuestionImportRow
                 {
                     RowNumber = sourceRow.RowNumber,
@@ -150,6 +174,11 @@ namespace Services
                 if (row.Answers.Count < 2)
                 {
                     errors.Add("Cần ít nhất 2 đáp án.");
+                }
+
+                if (row.Answers.Count > QuestionImportLimits.MaxAnswersPerQuestion)
+                {
+                    errors.Add($"Chỉ hỗ trợ tối đa {QuestionImportLimits.MaxAnswersPerQuestion} đáp án.");
                 }
 
                 var correctCount = row.Answers.Count(answer => answer.IsCorrect);
@@ -303,25 +332,34 @@ Explanation: 2 and 3 are prime numbers.
         private static List<List<string>> ReadFirstWorksheet(Stream stream)
         {
             using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+            ValidateArchive(archive);
             var sharedStrings = ReadSharedStrings(archive);
             var worksheetEntry = archive.GetEntry("xl/worksheets/sheet1.xml")
                 ?? throw new InvalidDataException("Không tìm thấy sheet1 trong file Excel.");
 
-            using var worksheetStream = worksheetEntry.Open();
-            var document = XDocument.Load(worksheetStream);
+            using var worksheetStream = ReadEntry(worksheetEntry);
+            var document = LoadXml(worksheetStream);
             var rows = new List<List<string>>();
 
             foreach (var rowElement in document.Descendants(SpreadsheetNs + "row"))
             {
+                if (rows.Count >= QuestionImportLimits.MaxRows)
+                    throw new InvalidDataException("Excel worksheet contains too many rows.");
+
                 var valuesByColumn = new Dictionary<int, string>();
                 var fallbackColumnIndex = 0;
+                var cells = rowElement.Elements(SpreadsheetNs + "c").ToList();
+                if (cells.Count > QuestionImportLimits.MaxCellsPerRow)
+                    throw new InvalidDataException("Excel row contains too many cells.");
 
-                foreach (var cell in rowElement.Elements(SpreadsheetNs + "c"))
+                foreach (var cell in cells)
                 {
                     var reference = (string?)cell.Attribute("r");
                     var columnIndex = !string.IsNullOrWhiteSpace(reference)
                         ? GetColumnIndex(reference)
                         : fallbackColumnIndex;
+                    if (columnIndex >= QuestionImportLimits.MaxCellsPerRow)
+                        throw new InvalidDataException("Excel cell column is outside the supported range.");
 
                     valuesByColumn[columnIndex] = ReadCellValue(cell, sharedStrings);
                     fallbackColumnIndex = columnIndex + 1;
@@ -354,11 +392,15 @@ Explanation: 2 and 3 are prime numbers.
                 return new List<string>();
             }
 
-            using var stream = entry.Open();
-            var document = XDocument.Load(stream);
-            return document.Descendants(SpreadsheetNs + "si")
-                .Select(si => string.Concat(si.Descendants(SpreadsheetNs + "t").Select(t => (string?)t ?? string.Empty)))
+            using var stream = ReadEntry(entry);
+            var document = LoadXml(stream);
+            var values = document.Descendants(SpreadsheetNs + "si")
+                .Select(si => EnsureCellLength(string.Concat(
+                    si.Descendants(SpreadsheetNs + "t").Select(t => (string?)t ?? string.Empty))))
                 .ToList();
+            if (values.Count > QuestionImportLimits.MaxSharedStrings)
+                throw new InvalidDataException("Excel contains too many shared strings.");
+            return values;
         }
 
         private static string ReadCellValue(XElement cell, IReadOnlyList<string> sharedStrings)
@@ -366,7 +408,8 @@ Explanation: 2 and 3 are prime numbers.
             var type = (string?)cell.Attribute("t");
             if (type == "inlineStr")
             {
-                return string.Concat(cell.Descendants(SpreadsheetNs + "t").Select(t => (string?)t ?? string.Empty));
+                return EnsureCellLength(string.Concat(
+                    cell.Descendants(SpreadsheetNs + "t").Select(t => (string?)t ?? string.Empty)));
             }
 
             var value = (string?)cell.Element(SpreadsheetNs + "v") ?? string.Empty;
@@ -375,7 +418,7 @@ Explanation: 2 and 3 are prime numbers.
                 sharedStringIndex >= 0 &&
                 sharedStringIndex < sharedStrings.Count)
             {
-                return sharedStrings[sharedStringIndex];
+                return EnsureCellLength(sharedStrings[sharedStringIndex]);
             }
 
             if (type == "b")
@@ -383,6 +426,69 @@ Explanation: 2 and 3 are prime numbers.
                 return value == "1" ? "true" : "false";
             }
 
+            return EnsureCellLength(value);
+        }
+
+        private static void ValidateArchive(ZipArchive archive)
+        {
+            if (archive.Entries.Count > QuestionImportLimits.MaxZipEntries)
+                throw new InvalidDataException("Excel archive contains too many entries.");
+
+            long totalBytes = 0;
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.Length > QuestionImportLimits.MaxEntryBytes)
+                    throw new InvalidDataException("Excel archive entry is too large.");
+
+                totalBytes = checked(totalBytes + entry.Length);
+                if (totalBytes > QuestionImportLimits.MaxTotalUncompressedBytes)
+                    throw new InvalidDataException("Excel archive expands beyond the supported size.");
+            }
+        }
+
+        private static MemoryStream ReadEntry(ZipArchiveEntry entry)
+        {
+            using var source = entry.Open();
+            return CopyToBoundedMemory(source, QuestionImportLimits.MaxEntryBytes);
+        }
+
+        private static MemoryStream CopyToBoundedMemory(Stream source, long maxBytes)
+        {
+            var destination = new MemoryStream();
+            var buffer = new byte[81920];
+            long totalBytes = 0;
+            int bytesRead;
+            while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                totalBytes += bytesRead;
+                if (totalBytes > maxBytes)
+                {
+                    destination.Dispose();
+                    throw new InvalidDataException("Input expands beyond the supported size.");
+                }
+
+                destination.Write(buffer, 0, bytesRead);
+            }
+
+            destination.Position = 0;
+            return destination;
+        }
+
+        private static XDocument LoadXml(Stream stream)
+        {
+            using var reader = XmlReader.Create(stream, new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit,
+                XmlResolver = null,
+                MaxCharactersInDocument = QuestionImportLimits.MaxEntryBytes
+            });
+            return XDocument.Load(reader, LoadOptions.None);
+        }
+
+        private static string EnsureCellLength(string value)
+        {
+            if (value.Length > QuestionImportLimits.MaxCellCharacters)
+                throw new InvalidDataException("Excel cell exceeds the supported length.");
             return value;
         }
 

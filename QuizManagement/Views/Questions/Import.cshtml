@@ -1,4 +1,5 @@
 @model QuestionImportInputViewModel
+@using Services
 @{
     ViewData["Title"] = "Import câu hỏi";
 }
@@ -21,6 +22,7 @@
                 <h2 class="h5 mb-3">Excel (.xlsx)</h2>
                 <input asp-for="ExcelFile" class="form-control" type="file" accept=".xlsx" />
                 <div class="small text-muted mt-3">
+                    Tối đa @(QuestionImportLimits.MaxUploadBytes / 1024 / 1024) MB và @QuestionImportLimits.MaxRows.ToString("N0") dòng.<br />
                     Header hỗ trợ: Question, Type, Answer1, Correct1, Answer2, Correct2, Explanation.
                     Correct nhận true/false, 1/0, yes/no, x.
                 </div>
