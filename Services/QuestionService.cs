@@ -15,14 +15,14 @@ namespace Services
         public IEnumerable<Question> GetQuestionsByDeckForStudy(int deckId)
             => _repository.GetQuestionsByDeckForStudy(deckId);
 
-        public IEnumerable<Question> GetQuestionsByDeck(int deckId, string userId) => _repository.GetQuestionsByDeck(deckId, userId);
-
         public Question? GetQuestionById(int id, string userId, bool allowAll = false)
             => _repository.GetQuestionById(id, userId, allowAll);
 
         public void AddQuestion(Question question) => _repository.AddQuestion(question);
 
-        public void UpdateQuestion(Question question) => _repository.UpdateQuestion(question);
+        public void AddQuestions(IEnumerable<Question> questions) => _repository.AddQuestions(questions);
+
+        public QuestionUpdateResult TryUpdateQuestion(Question question) => _repository.TryUpdateQuestion(question);
 
         public void DeleteQuestion(Question question) => _repository.DeleteQuestion(question);
     }

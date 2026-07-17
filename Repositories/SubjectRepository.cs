@@ -15,9 +15,6 @@ namespace Repositories
             _context = context;
         }
 
-        public IEnumerable<Subject> GetSubjectsByUserId(string userId)
-            => SubjectDAO.Instance.GetSubjectsByUserId(_context, userId);
-
         public IEnumerable<Subject> GetAllSubjects()
             => SubjectDAO.Instance.GetAllSubjects(_context);
 

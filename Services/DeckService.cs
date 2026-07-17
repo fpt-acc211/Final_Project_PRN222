@@ -1,4 +1,6 @@
 using BusinessObjects;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 
 namespace Services
@@ -15,7 +17,6 @@ namespace Services
         public IEnumerable<Deck> GetDecksBySubjectForStudy(int subjectId)
             => _repository.GetDecksBySubjectForStudy(subjectId);
 
-        public IEnumerable<Deck> GetDecksBySubject(int subjectId, string userId) => _repository.GetDecksBySubject(subjectId, userId);
 
         public Deck? GetDeckForStudy(int id) => _repository.GetDeckForStudy(id);
 
@@ -24,9 +25,33 @@ namespace Services
 
         public bool NameExists(int subjectId, string name, int? excludedId = null) => _repository.NameExists(subjectId, name, excludedId);
 
-        public void AddDeck(Deck deck) => _repository.AddDeck(deck);
+        public bool TryAddDeck(Deck deck)
+        {
+            try
+            {
+                _repository.AddDeck(deck);
+                return true;
+            }
+            catch (DbUpdateException exception)
+                when (exception.InnerException is SqlException { Number: 2601 or 2627 })
+            {
+                return false;
+            }
+        }
 
-        public void UpdateDeck(Deck deck) => _repository.UpdateDeck(deck);
+        public bool TryUpdateDeck(Deck deck)
+        {
+            try
+            {
+                _repository.UpdateDeck(deck);
+                return true;
+            }
+            catch (DbUpdateException exception)
+                when (exception.InnerException is SqlException { Number: 2601 or 2627 })
+            {
+                return false;
+            }
+        }
 
         public void DeleteDeck(Deck deck) => _repository.DeleteDeck(deck);
     }

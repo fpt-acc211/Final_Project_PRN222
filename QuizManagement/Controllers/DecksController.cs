@@ -73,13 +73,17 @@ namespace QuizManagement.Controllers
                 return View(model);
             }
 
-            _deckService.AddDeck(new Deck
+            if (!_deckService.TryAddDeck(new Deck
             {
                 SubjectId = model.SubjectId,
                 Name = model.Name,
                 TimeLimitMinutes = model.TimeLimitMinutes,
                 CreatedBy = User.Identity?.Name
-            });
+            }))
+            {
+                ModelState.AddModelError(nameof(model.Name), "Tên bộ đề đã tồn tại trong môn học này.");
+                return View(model);
+            }
 
             TempData["SuccessMessage"] = "Đã tạo bộ đề.";
             return RedirectToAction(nameof(Index), new { subjectId = model.SubjectId });
@@ -138,7 +142,11 @@ namespace QuizManagement.Controllers
             deck.Name = model.Name;
             deck.TimeLimitMinutes = model.TimeLimitMinutes;
             deck.UpdatedBy = User.Identity?.Name;
-            _deckService.UpdateDeck(deck);
+            if (!_deckService.TryUpdateDeck(deck))
+            {
+                ModelState.AddModelError(nameof(model.Name), "Tên bộ đề đã tồn tại trong môn học này.");
+                return View(model);
+            }
 
             TempData["SuccessMessage"] = "Đã cập nhật bộ đề.";
             return RedirectToAction(nameof(Index), new { subjectId = deck.SubjectId });

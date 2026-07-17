@@ -37,9 +37,28 @@ namespace QuizManagement.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(SubmitReportViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            var question = _questionService.GetQuestionById(
+                model.QuestionId,
+                CurrentUserId(),
+                allowAll: true);
+            if (question is null)
+                return NotFound();
 
-            _reportService.Submit(model.QuestionId, CurrentUserId(), model.Reason, model.Note);
+            model.QuestionContent = question.Content;
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var result = _reportService.Submit(
+                model.QuestionId,
+                CurrentUserId(),
+                model.Reason,
+                model.Note);
+            if (result == QuestionReportSubmission.AlreadyPending)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Bạn đã gửi báo cáo cho câu hỏi này và báo cáo đang chờ xử lý.");
+                return View(model);
+            }
 
             TempData["SuccessMessage"] = "Đã gửi báo cáo. Cảm ơn bạn đã đóng góp!";
 
@@ -51,14 +70,17 @@ namespace QuizManagement.Controllers
 
         // GET /QuestionReports — for Mentor/Admin
         [Authorize(Policy = "ManageContent")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
             var isAdmin = User.IsInRole(AppRoles.Admin);
-            var reports = isAdmin
-                ? _reportService.GetAllReports()
-                : _reportService.GetReportsByContentOwner(CurrentUserId());
+            const int pageSize = 50;
+            var result = await _reportService.GetPageAsync(
+                CurrentUserId(),
+                isAdmin,
+                page,
+                pageSize);
 
-            var model = reports.Select(r => new QuestionReportListItemViewModel
+            var model = result.Reports.Select(r => new QuestionReportListItemViewModel
             {
                 Id = r.Id,
                 QuestionId = r.QuestionId,
@@ -72,6 +94,11 @@ namespace QuizManagement.Controllers
                 CreatedAt = r.CreatedAt
             }).ToList();
 
+            ViewBag.Page = Math.Min(
+                Math.Max(1, page),
+                Math.Max(1, (int)Math.Ceiling((double)result.TotalCount / pageSize)));
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = result.TotalCount;
             return View(model);
         }
 
@@ -81,8 +108,16 @@ namespace QuizManagement.Controllers
         [Authorize(Policy = "ManageContent")]
         public IActionResult Resolve(int id)
         {
-            _reportService.Resolve(id);
-            TempData["SuccessMessage"] = "Đã đánh dấu báo cáo là đã xử lý.";
+            var result = _reportService.Resolve(id, CurrentUserId(), User.IsInRole(AppRoles.Admin));
+            if (result == QuestionReportResolution.NotFound)
+            {
+                return NotFound();
+            }
+
+            TempData[result == QuestionReportResolution.Resolved ? "SuccessMessage" : "ErrorMessage"] =
+                result == QuestionReportResolution.Resolved
+                    ? "Đã đánh dấu báo cáo là đã xử lý."
+                    : "Báo cáo này đã được xử lý trước đó.";
             return RedirectToAction(nameof(Index));
         }
 
