@@ -64,7 +64,7 @@ else
                                 <td class="text-center @scoreClass">@entry.BestPercentage.ToString("0.#")%</td>
                                 <td class="text-center" style="color:var(--text-muted);">@entry.AttemptCount lần</td>
                                 <td class="text-center" style="color:var(--text-muted);font-size:.85rem;">
-                                    @entry.LastAttemptAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    @VietnamTime.FromUtc(entry.LastAttemptAt).ToString("dd/MM/yyyy HH:mm")
                                 </td>
                             </tr>
                         }

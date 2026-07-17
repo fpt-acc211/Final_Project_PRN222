@@ -21,34 +21,28 @@
 else
 {
     <div class="row g-3 mb-4">
-        @{
-            var totalAttempts = Model.DeckStats.Sum(d => d.TotalAttempts);
-            var totalUnique = Model.DeckStats.Sum(d => d.UniqueUsers);
-            var overallAvg = Model.DeckStats.Any() ? Math.Round(Model.DeckStats.Average(d => d.AvgPercentage), 1) : 0.0;
-            var overallBest = Model.DeckStats.Any() ? Model.DeckStats.Max(d => d.BestPercentage) : 0.0;
-        }
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card stat-card--purple">
                 <div class="stat-card__label">Tổng lượt làm</div>
-                <div class="stat-card__value">@totalAttempts</div>
+                <div class="stat-card__value">@Model.TotalAttempts</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card stat-card--cyan">
                 <div class="stat-card__label">Người dùng khác nhau</div>
-                <div class="stat-card__value">@totalUnique</div>
+                <div class="stat-card__value">@Model.UniqueUsers</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card stat-card--green">
                 <div class="stat-card__label">Điểm TB toàn bộ</div>
-                <div class="stat-card__value">@overallAvg.ToString("0.#")%</div>
+                <div class="stat-card__value">@Model.OverallAvgPercentage.ToString("0.#")%</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="stat-card stat-card--green">
                 <div class="stat-card__label">Điểm cao nhất</div>
-                <div class="stat-card__value">@overallBest.ToString("0.#")%</div>
+                <div class="stat-card__value">@Model.OverallBestPercentage.ToString("0.#")%</div>
             </div>
         </div>
     </div>

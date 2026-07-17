@@ -13,7 +13,7 @@
         <span id="answeredBadge" class="badge bg-primary" style="font-size:.82rem;padding:.35rem .7rem;flex-shrink:0;">
             0 / @Model.Questions.Count đã trả lời
         </span>
-        @if (Model.TimeLimitSeconds > 0)
+        @if (Model.TimeRemainingSeconds.HasValue)
         {
             <span id="quizTimer" class="badge bg-warning text-dark"
                   style="font-size:.9rem;padding:.35rem .8rem;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:4.5rem;text-align:center;">
@@ -124,9 +124,10 @@
         }
 
         // ── Timer ──────────────────────────────────────────────
-        var timeLimitSeconds = @Model.TimeLimitSeconds;
-        if (timeLimitSeconds > 0) {
-            var remaining = timeLimitSeconds;
+        var hasTimeLimit = @(Model.TimeRemainingSeconds.HasValue ? "true" : "false");
+        if (hasTimeLimit) {
+            var initialRemainingSeconds = @(Model.TimeRemainingSeconds ?? 0);
+            var deadline = performance.now() + initialRemainingSeconds * 1000;
             var timerEl = document.getElementById('quizTimer');
 
             function formatTime(s) {
@@ -136,6 +137,7 @@
             }
 
             function tickTimer() {
+                var remaining = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
                 timerEl.textContent = formatTime(remaining);
                 if (remaining <= 60) {
                     timerEl.classList.remove('bg-warning', 'text-dark');
@@ -147,8 +149,7 @@
                     document.getElementById('quizForm').submit();
                     return;
                 }
-                remaining--;
-                setTimeout(tickTimer, 1000);
+                setTimeout(tickTimer, 250);
             }
 
             tickTimer();

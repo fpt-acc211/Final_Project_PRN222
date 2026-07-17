@@ -2,6 +2,7 @@ using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuizManagement.ViewModels.Statistics;
+using QuizManagement.Helpers;
 using Services;
 using System.Security.Claims;
 
@@ -19,73 +20,60 @@ namespace QuizManagement.Controllers
             _deckService = deckService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var histories = _quizService.GetTestHistoriesByUser(CurrentUserId())
-                .OrderBy(history => history.CreatedAt)
-                .ToList();
-
-            var total = histories.Count;
+            var statistics = await _quizService.GetUserStatisticsAsync(CurrentUserId());
+            var total = statistics.TotalAttempts;
             var model = new StatisticsViewModel
             {
                 TotalAttempts = total,
-                AveragePercentage = total > 0 ? Math.Round(histories.Average(h => h.Percentage), 1) : 0,
-                BestPercentage = total > 0 ? Math.Round(histories.Max(h => h.Percentage), 1) : 0,
-                LowestPercentage = total > 0 ? Math.Round(histories.Min(h => h.Percentage), 1) : 0,
-                PassedAttempts = histories.Count(h => h.Percentage >= 50),
-                FailedAttempts = histories.Count(h => h.Percentage < 50)
+                AveragePercentage = Math.Round(statistics.AveragePercentage, 1),
+                BestPercentage = Math.Round(statistics.BestPercentage, 1),
+                LowestPercentage = Math.Round(statistics.LowestPercentage, 1),
+                PassedAttempts = statistics.PassedAttempts,
+                FailedAttempts = total - statistics.PassedAttempts
             };
 
             model.PassRate = total > 0 ? Math.Round((double)model.PassedAttempts / total * 100, 1) : 0;
-            model.RecentScores = histories.TakeLast(12)
-                .Select(history => new ScoreTrendPointViewModel
+            model.RecentScores = statistics.RecentScores
+                .Select(score => new ScoreTrendPointViewModel
                 {
-                    Label = history.CreatedAt.ToLocalTime().ToString("dd/MM"),
-                    Percentage = history.Percentage
+                    Label = VietnamTime.FromUtc(score.CreatedAt).ToString("dd/MM"),
+                    Percentage = score.Percentage
                 })
                 .ToList();
 
-            model.SubjectStats = histories
-                .GroupBy(history => history.Deck.Subject.Name)
-                .Select(group => BuildGroupPerformance(group.Key, group))
-                .OrderByDescending(group => group.AveragePercentage)
-                .ThenBy(group => group.Name)
+            model.SubjectStats = statistics.SubjectStats
+                .Select(group => BuildGroupPerformance(group.Name, group))
                 .ToList();
 
-            model.DeckStats = histories
-                .GroupBy(history => $"{history.Deck.Subject.Name} / {history.Deck.Name}")
-                .Select(group => BuildGroupPerformance(group.Key, group))
-                .OrderByDescending(group => group.AveragePercentage)
-                .ThenBy(group => group.Name)
+            model.DeckStats = statistics.DeckStats
+                .Select(group => BuildGroupPerformance(
+                    $"{group.ParentName} / {group.Name}",
+                    group))
                 .ToList();
 
             return View(model);
         }
 
-        public IActionResult Leaderboard(int deckId)
+        public async Task<IActionResult> Leaderboard(int deckId)
         {
             var deck = _deckService.GetDeckForStudy(deckId);
             if (deck is null) return NotFound();
 
-            var histories = _quizService.GetTestHistoriesByDeck(deckId);
-
-            var entries = histories
-                .GroupBy(h => h.UserId)
-                .Select(g =>
+            var leaderboard = await _quizService.GetLeaderboardAsync(deckId, 20);
+            var entries = leaderboard
+                .Select((entry, index) =>
                 {
-                    var best = g.MaxBy(h => h.Percentage)!;
                     return new LeaderboardEntryViewModel
                     {
-                        Username = best.User.Username,
-                        BestPercentage = Math.Round(g.Max(h => h.Percentage), 1),
-                        AttemptCount = g.Count(),
-                        LastAttemptAt = g.Max(h => h.CreatedAt)
+                        Rank = index + 1,
+                        Username = entry.Username,
+                        BestPercentage = Math.Round(entry.BestPercentage, 1),
+                        AttemptCount = entry.AttemptCount,
+                        LastAttemptAt = entry.LastAttemptAt
                     };
                 })
-                .OrderByDescending(e => e.BestPercentage)
-                .ThenByDescending(e => e.LastAttemptAt)
-                .Select((e, i) => { e.Rank = i + 1; return e; })
-                .Take(20)
                 .ToList();
 
             ViewBag.SubjectId = deck.SubjectId;
@@ -102,66 +90,64 @@ namespace QuizManagement.Controllers
         }
 
         [Authorize(Policy = "ManageContent")]
-        public IActionResult MentorStats()
+        public async Task<IActionResult> MentorStats()
         {
             var isAdmin = User.IsInRole(AppRoles.Admin);
-            var histories = _quizService.GetTestHistoriesByContentOwner(CurrentUserId(), isAdmin);
-
-            var subjectStats = histories
-                .GroupBy(h => h.Deck.Subject.Name)
-                .Select(g => new MentorSubjectStatViewModel
+            var statistics = await _quizService
+                .GetMentorStatisticsAsync(CurrentUserId(), isAdmin);
+            var subjectStats = statistics.SubjectStats
+                .Select(group =>
                 {
-                    SubjectName = g.Key,
-                    TotalAttempts = g.Count(),
-                    UniqueUsers = g.Select(h => h.UserId).Distinct().Count(),
-                    AvgPercentage = Math.Round(g.Average(h => h.Percentage), 1),
-                    BestPercentage = Math.Round(g.Max(h => h.Percentage), 1)
-                })
-                .OrderByDescending(s => s.TotalAttempts)
-                .ThenBy(s => s.SubjectName)
-                .ToList();
-
-            var deckStats = histories
-                .GroupBy(h => h.DeckId)
-                .Select(g =>
-                {
-                    var first = g.First();
-                    return new MentorDeckStatViewModel
+                    return new MentorSubjectStatViewModel
                     {
-                        DeckId = first.DeckId,
-                        DeckName = first.Deck.Name,
-                        SubjectName = first.Deck.Subject.Name,
-                        TotalAttempts = g.Count(),
-                        UniqueUsers = g.Select(h => h.UserId).Distinct().Count(),
-                        AvgPercentage = Math.Round(g.Average(h => h.Percentage), 1),
-                        BestPercentage = Math.Round(g.Max(h => h.Percentage), 1),
-                        LastAttemptAt = g.Max(h => h.CreatedAt)
+                        SubjectName = group.Name,
+                        TotalAttempts = group.Attempts,
+                        UniqueUsers = group.UniqueUsers,
+                        AvgPercentage = Math.Round(group.AveragePercentage, 1),
+                        BestPercentage = Math.Round(group.BestPercentage, 1)
                     };
                 })
-                .OrderByDescending(d => d.TotalAttempts)
-                .ThenBy(d => d.SubjectName)
-                .ThenBy(d => d.DeckName)
+                .ToList();
+
+            var deckStats = statistics.DeckStats
+                .Select(group =>
+                {
+                    return new MentorDeckStatViewModel
+                    {
+                        DeckId = group.Id,
+                        DeckName = group.Name,
+                        SubjectName = group.ParentName ?? string.Empty,
+                        TotalAttempts = group.Attempts,
+                        UniqueUsers = group.UniqueUsers,
+                        AvgPercentage = Math.Round(group.AveragePercentage, 1),
+                        BestPercentage = Math.Round(group.BestPercentage, 1),
+                        LastAttemptAt = group.LastAttemptAt
+                    };
+                })
                 .ToList();
 
             return View(new MentorStatsViewModel
             {
+                TotalAttempts = statistics.TotalAttempts,
+                UniqueUsers = statistics.UniqueUsers,
+                OverallAvgPercentage = Math.Round(statistics.AveragePercentage, 1),
+                OverallBestPercentage = Math.Round(statistics.BestPercentage, 1),
                 SubjectStats = subjectStats,
                 DeckStats = deckStats
             });
         }
 
-        private static GroupPerformanceViewModel BuildGroupPerformance(string name, IEnumerable<BusinessObjects.TestHistory> histories)
-        {
-            var list = histories.ToList();
-            return new GroupPerformanceViewModel
+        private static GroupPerformanceViewModel BuildGroupPerformance(
+            string name,
+            AnalyticsGroupReadModel group)
+            => new()
             {
                 Name = name,
-                Attempts = list.Count,
-                AveragePercentage = Math.Round(list.Average(h => h.Percentage), 1),
-                BestPercentage = Math.Round(list.Max(h => h.Percentage), 1),
-                LastAttemptAt = list.Max(h => h.CreatedAt)
+                Attempts = group.Attempts,
+                AveragePercentage = Math.Round(group.AveragePercentage, 1),
+                BestPercentage = Math.Round(group.BestPercentage, 1),
+                LastAttemptAt = group.LastAttemptAt
             };
-        }
 
         private string CurrentUserId()
         {

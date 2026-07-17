@@ -33,7 +33,7 @@
         </div>
         <div class="stat-card stat-card--cyan">
             <div class="stat-card__label">Thời gian</div>
-            <div class="stat-card__value" style="font-size:1rem;">@Model.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</div>
+            <div class="stat-card__value" style="font-size:1rem;">@VietnamTime.FromUtc(Model.CreatedAt).ToString("dd/MM HH:mm")</div>
         </div>
     </div>
 </div>

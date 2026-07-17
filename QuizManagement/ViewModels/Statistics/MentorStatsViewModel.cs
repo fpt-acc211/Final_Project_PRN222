@@ -2,6 +2,10 @@ namespace QuizManagement.ViewModels.Statistics
 {
     public class MentorStatsViewModel
     {
+        public int TotalAttempts { get; set; }
+        public int UniqueUsers { get; set; }
+        public double OverallAvgPercentage { get; set; }
+        public double OverallBestPercentage { get; set; }
         public List<MentorSubjectStatViewModel> SubjectStats { get; set; } = new();
         public List<MentorDeckStatViewModel> DeckStats { get; set; } = new();
     }

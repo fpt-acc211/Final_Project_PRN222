@@ -37,7 +37,7 @@
             <div class="stat-card__value">
                 @if (Model.LastQuizDate.HasValue)
                 {
-                    @Model.LastQuizDate.Value.ToLocalTime().ToString("dd/MM HH:mm")
+                    @VietnamTime.FromUtc(Model.LastQuizDate.Value).ToString("dd/MM HH:mm")
                 }
                 else
                 {
@@ -91,7 +91,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <small style="color:var(--text-muted);">@h.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</small>
+                                            <small style="color:var(--text-muted);">@VietnamTime.FromUtc(h.CreatedAt).ToString("dd/MM HH:mm")</small>
                                         </td>
                                         <td class="text-end">
                                             <a asp-controller="History" asp-action="Details" asp-route-id="@h.Id"
