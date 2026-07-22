@@ -41,8 +41,7 @@ Final_Project_PRN222/
 │   ├── Views/
 │   └── wwwroot/
 ├── QuizManagement.Tests/    # Unit, controller, view và integration tests
-├── CreateDB.sql             # Bootstrap schema hiện tại
-├── SeedDemoData.sql         # Dữ liệu demo tùy chọn
+├── CreateDB.sql             # Bootstrap schema hiện tại và dữ liệu demo
 ├── global.json              # Pin .NET SDK
 └── QuizManagementSystem.slnx
 ```
@@ -67,17 +66,18 @@ Thực hiện các bước sau từ thư mục gốc repository.
 
 ### 1. Tạo database
 
-Mở và chạy toàn bộ [CreateDB.sql](./CreateDB.sql) bằng SQL Server Management Studio.
+Nếu `QuizManagementDB` đang tồn tại và không cần giữ dữ liệu, xóa database trước:
 
-Script có ba hành vi rõ ràng:
+```sql
+USE [master];
+ALTER DATABASE [QuizManagementDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE [QuizManagementDB];
+```
 
-- Chưa có `QuizManagementDB`: tự tạo database và schema đầy đủ.
-- Database đã đúng schema hiện tại: kiểm tra rồi kết thúc, không thay đổi dữ liệu.
-- Database cũ hoặc thiếu schema: dừng với lỗi `51020` hoặc `51021`; không tự sửa và không tự xóa dữ liệu.
+Sau đó mở và chạy toàn bộ [CreateDB.sql](./CreateDB.sql) bằng SQL Server Management Studio. Một file này tự tạo database, schema phiên bản hiện tại và toàn bộ dữ liệu demo; không cần chạy file upgrade, seed hay EF migration riêng.
 
-Project dùng `CreateDB.sql` làm nguồn schema chính, không yêu cầu chạy EF migration.
-
-Nếu đang dùng schema trước ngày 22/07/2026, chạy [UpgradeDB_20260722.sql](./UpgradeDB_20260722.sql) một lần để bổ sung xác minh email, khóa đăng nhập bền vững và tiến độ flashcard mà không xóa dữ liệu.
+> [!WARNING]
+> Lệnh `DROP DATABASE` xóa toàn bộ dữ liệu hiện có. Chỉ dùng cho database local/demo có thể tạo lại.
 
 ### 2. Cấu hình connection string
 
@@ -136,17 +136,7 @@ Với Visual Studio, mở `QuizManagementSystem.slnx`, chọn `QuizManagement` l
 
 ## Dữ liệu demo
 
-Dữ liệu demo là tùy chọn và chỉ được dùng trên database cô lập. Sau khi tạo schema, mở [SeedDemoData.sql](./SeedDemoData.sql) trong SSMS. Trong chính query session đó, chạy opt-in sau trước khi chạy phần còn lại của script:
-
-```sql
-EXEC sys.sp_set_session_context
-    @key = N'QuizManagement.AllowDemoSeed',
-    @value = 1;
-```
-
-Không đổi connection/session giữa lệnh opt-in và script seed. Opt-in được tự xóa khi script hoàn tất hoặc rollback.
-
-Script có thể chạy lại; mỗi lần chạy chỉ thay thế dữ liệu thuộc các seed identity cố định. Dữ liệu mẫu gồm tài khoản, học liệu, quiz attempt, lịch sử, báo cáo câu hỏi và login attempt.
+Dữ liệu demo được nạp tự động bởi `CreateDB.sql`, gồm tài khoản, học liệu, quiz attempt, lịch sử, báo cáo câu hỏi và login attempt.
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -155,7 +145,7 @@ Script có thể chạy lại; mỗi lần chạy chỉ thay thế dữ liệu t
 | User | `user.demo@quiz.local` | `Test@123456` |
 
 > [!WARNING]
-> Các credential trên là công khai. Không chạy `SeedDemoData.sql` trên production hoặc database chứa dữ liệu thật.
+> Các credential trên là công khai. Không chạy `CreateDB.sql` trên production hoặc database chứa dữ liệu thật.
 
 ### Reset database demo
 
@@ -167,11 +157,11 @@ ALTER DATABASE [QuizManagementDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
 DROP DATABASE [QuizManagementDB];
 ```
 
-Sau đó chạy lại `CreateDB.sql` và, nếu cần, `SeedDemoData.sql`. Thao tác này xóa toàn bộ dữ liệu hiện có.
+Sau đó chỉ cần chạy lại `CreateDB.sql`. Thao tác này xóa toàn bộ dữ liệu hiện có rồi tạo lại schema và dữ liệu demo.
 
 ## Tạo Admin local tùy chọn
 
-Nếu không dùng demo seed, có thể bật `AdminSeed` trong `appsettings.Local.json`:
+Nếu không dùng database demo, có thể bật `AdminSeed` trong `appsettings.Local.json`:
 
 ```json
 {
@@ -237,7 +227,6 @@ dotnet test QuizManagementSystem.slnx -c Release
 
 - **Không kết nối được database:** kiểm tra SQL Server đang chạy và `DefaultConnection` trong `appsettings.Local.json`.
 - **`CreateDB.sql` báo `51020`/`51021`:** database đang có schema cũ hoặc không đầy đủ; với dữ liệu demo, reset database rồi chạy lại script.
-- **`SeedDemoData.sql` báo `51019`:** opt-in chưa được đặt trong đúng SQL session.
 - **Integration tests không kết nối được:** khởi động LocalDB `MSSQLLocalDB` hoặc đặt `QUIZ_TEST_SQLSERVER_CONNECTION` để dùng SQL Server khác.
 - **HTTPS certificate chưa được trust:** dùng profile `http`, hoặc chạy `dotnet dev-certs https --trust`.
 

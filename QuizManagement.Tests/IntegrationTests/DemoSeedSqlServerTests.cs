@@ -8,45 +8,28 @@ public class DemoSeedSqlServerTests
 {
     [Fact]
     [Trait("Category", "SqlServerIntegration")]
-    public void UpgradeScript_PreservesLegacyUsersAndIsIdempotent()
+    public void CreateScript_CreatesLatestSchemaAndDemoDataInOneRun()
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
         using var master = new SqlConnection(SqlServerTestConnection.ForDatabase("master"));
         master.Open();
-        new SqlCommand($"CREATE DATABASE [{databaseName}]", master).ExecuteNonQuery();
 
         try
         {
+            ExecuteBootstrap(master, databaseName);
+
             using var database = new SqlConnection(SqlServerTestConnection.ForDatabase(databaseName));
             database.Open();
-            new SqlCommand("""
-                CREATE TABLE dbo.Users (Id NVARCHAR(450) PRIMARY KEY, Email NVARCHAR(256) NOT NULL);
-                CREATE TABLE dbo.Questions (Id INT PRIMARY KEY);
-                CREATE TABLE dbo.LoginAttempts (
-                    Id INT IDENTITY(1,1) PRIMARY KEY,
-                    Email NVARCHAR(256) NOT NULL,
-                    IpAddress NVARCHAR(50) NOT NULL,
-                    IsSuccess BIT NOT NULL,
-                    UserId NVARCHAR(450) NULL,
-                    CreatedAt DATETIME2(7) NOT NULL,
-                    CONSTRAINT FK_LegacyLoginAttempts_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id));
-                INSERT INTO dbo.Users (Id, Email) VALUES (N'legacy', N'legacy@test.local');
-                INSERT INTO dbo.Questions (Id) VALUES (1);
-                """, database).ExecuteNonQuery();
-
-            ExecuteUpgrade(database, databaseName);
-            ExecuteUpgrade(database, databaseName);
-
-            Assert.Equal(1, Scalar(database, "SELECT CONVERT(INT, EmailConfirmed) FROM dbo.Users WHERE Id = N'legacy'"));
+            Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Users') AND name = N'EmailConfirmed'"));
+            Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.LoginAttempts') AND name = N'CountsTowardLockout'"));
             Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM sys.tables WHERE name = N'FlashcardProgresses'"));
-            new SqlCommand("INSERT INTO dbo.Users (Id, Email) VALUES (N'new', N'new@test.local')", database)
-                .ExecuteNonQuery();
-            Assert.Equal(0, Scalar(database, "SELECT CONVERT(INT, EmailConfirmed) FROM dbo.Users WHERE Id = N'new'"));
+            Assert.Equal(3, Scalar(database, "SELECT COUNT(*) FROM dbo.Users WHERE Id LIKE N'seed-%'"));
+            Assert.Equal(21, Scalar(database, "SELECT COUNT(*) FROM dbo.Questions"));
         }
         finally
         {
             new SqlCommand(
-                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}]",
+                $"USE [master]; ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}]",
                 master).ExecuteNonQuery();
         }
     }
@@ -68,7 +51,7 @@ public class DemoSeedSqlServerTests
             database.Open();
             new SqlCommand("CREATE TABLE dbo.Users (Id INT NOT NULL PRIMARY KEY)", database).ExecuteNonQuery();
 
-            var exception = Assert.Throws<SqlException>(() => ExecuteSchema(database, databaseName));
+            var exception = Assert.Throws<SqlException>(() => ExecuteBootstrap(database, databaseName));
 
             Assert.Equal(51020, exception.Number);
             Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM sys.tables WHERE is_ms_shipped = 0"));
@@ -83,7 +66,7 @@ public class DemoSeedSqlServerTests
 
     [Fact]
     [Trait("Category", "SqlServerIntegration")]
-    public void Seed_RequiresOptInAndRerunsAfterDemoActivityWithoutDeletingUnrelatedData()
+    public void CreateScript_RerunsAfterDemoActivityWithoutDeletingUnrelatedData()
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
         var masterConnectionString = SqlServerTestConnection.ForDatabase("master");
@@ -93,22 +76,13 @@ public class DemoSeedSqlServerTests
 
         try
         {
-            ExecuteSchema(master, databaseName);
+            ExecuteBootstrap(master, databaseName);
 
             using var database = new SqlConnection(databaseConnectionString);
             database.Open();
-            ExecuteSchema(database, databaseName);
-
-            var blocked = Assert.Throws<SqlException>(() => ExecuteSeed(database, databaseName));
-            Assert.Equal(51019, blocked.Number);
-            Assert.Equal(0, Scalar(database, "SELECT COUNT(*) FROM dbo.Users"));
-
-            EnableSeed(database);
-            ExecuteSeed(database, databaseName);
             AddDemoActivityAndUnrelatedData(database);
 
-            EnableSeed(database);
-            ExecuteSeed(database, databaseName);
+            ExecuteBootstrap(database, databaseName);
 
             Assert.Equal(3, Scalar(database, "SELECT COUNT(*) FROM dbo.Users WHERE Id LIKE N'seed-%'"));
             Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM dbo.Users WHERE Id = N'outside-user'"));
@@ -140,9 +114,6 @@ public class DemoSeedSqlServerTests
             Assert.Equal(2, Scalar(database, "SELECT COUNT(*) FROM dbo.LoginAttempts WHERE Email = N'user.demo@quiz.local'"));
             Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM dbo.LoginAttempts WHERE Email = N'unknown.demo@quiz.local'"));
             Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM dbo.LoginAttempts WHERE Email = N'outside@test.local'"));
-            Assert.Equal(0, Scalar(database, """
-                SELECT ISNULL(TRY_CONVERT(INT, SESSION_CONTEXT(N'QuizManagement.AllowDemoSeed')), 0)
-                """));
         }
         finally
         {
@@ -189,35 +160,13 @@ public class DemoSeedSqlServerTests
             """, database).ExecuteNonQuery();
     }
 
-    private static void ExecuteSchema(SqlConnection database, string databaseName)
+    private static void ExecuteBootstrap(SqlConnection database, string databaseName)
     {
         var path = RootFile("CreateDB.sql");
         var script = File.ReadAllText(path)
             .Replace("QuizManagementDB", databaseName, StringComparison.Ordinal);
         ExecuteBatches(database, script);
     }
-
-    private static void ExecuteSeed(SqlConnection database, string databaseName)
-    {
-        var path = RootFile("SeedDemoData.sql");
-        var script = File.ReadAllText(path)
-            .Replace("USE QuizManagementDB;", $"USE [{databaseName}];", StringComparison.Ordinal);
-        ExecuteBatches(database, script);
-    }
-
-    private static void ExecuteUpgrade(SqlConnection database, string databaseName)
-    {
-        var script = File.ReadAllText(RootFile("UpgradeDB_20260722.sql"))
-            .Replace("QuizManagementDB", databaseName, StringComparison.Ordinal);
-        ExecuteBatches(database, script);
-    }
-
-    private static void EnableSeed(SqlConnection database)
-        => new SqlCommand("""
-            EXEC sys.sp_set_session_context
-                @key = N'QuizManagement.AllowDemoSeed',
-                @value = 1;
-            """, database).ExecuteNonQuery();
 
     private static void ExecuteBatches(SqlConnection database, string script)
     {
