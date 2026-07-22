@@ -19,6 +19,8 @@ public partial class User
 
     public bool IsDisabled { get; set; }
 
+    public bool EmailConfirmed { get; set; }
+
     public string? SecurityStamp { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -28,4 +30,6 @@ public partial class User
     public virtual ICollection<Subject> Subjects { get; set; } = new List<Subject>();
 
     public virtual ICollection<TestHistory> TestHistories { get; set; } = new List<TestHistory>();
+
+    public virtual ICollection<FlashcardProgress> FlashcardProgresses { get; set; } = new List<FlashcardProgress>();
 }

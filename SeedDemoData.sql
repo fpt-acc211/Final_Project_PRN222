@@ -65,6 +65,10 @@ DELETE FROM LoginAttempts
 WHERE UserId IN (SELECT Id FROM @SeedUserIds)
    OR Email IN (SELECT Email FROM @SeedEmails);
 
+DELETE FROM FlashcardProgresses
+WHERE UserId IN (SELECT Id FROM @SeedUserIds)
+   OR QuestionId IN (SELECT Id FROM @SeedQuestionIds);
+
 DELETE trd
 FROM TestResultDetails trd
 JOIN TestHistories th ON th.Id = trd.TestHistoryId
@@ -114,7 +118,7 @@ BEGIN
     THROW 51000, 'Demo username/email already exists outside seed data. Please rename or remove the duplicate account first.', 1;
 END;
 
-INSERT INTO Users (Id, Username, Email, PasswordHash, Role, AvatarUrl, IsDisabled, SecurityStamp, CreatedAt)
+INSERT INTO Users (Id, Username, Email, PasswordHash, Role, AvatarUrl, IsDisabled, EmailConfirmed, SecurityStamp, CreatedAt)
 VALUES
 (
     @AdminId,
@@ -124,6 +128,7 @@ VALUES
     N'Admin',
     NULL,
     0,
+    1,
     CONVERT(NVARCHAR(450), NEWID()),
     SYSUTCDATETIME()
 ),
@@ -135,6 +140,7 @@ VALUES
     N'Mentor',
     NULL,
     0,
+    1,
     CONVERT(NVARCHAR(450), NEWID()),
     SYSUTCDATETIME()
 ),
@@ -146,6 +152,7 @@ VALUES
     N'User',
     NULL,
     0,
+    1,
     CONVERT(NVARCHAR(450), NEWID()),
     SYSUTCDATETIME()
 );

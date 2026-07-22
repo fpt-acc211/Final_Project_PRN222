@@ -17,7 +17,7 @@ public class AdminInvariantSqlServerTests
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
         var options = new DbContextOptionsBuilder<QuizManagementDbContext>()
-            .UseSqlServer($"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer(SqlServerTestConnection.ForDatabase(databaseName))
             .Options;
 
         using var context = new QuizManagementDbContext(options);
@@ -118,7 +118,7 @@ public class AdminInvariantSqlServerTests
         DbCommandInterceptor? interceptor = null)
     {
         var builder = new DbContextOptionsBuilder<QuizManagementDbContext>()
-            .UseSqlServer($"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True");
+            .UseSqlServer(SqlServerTestConnection.ForDatabase(databaseName));
         if (interceptor is not null)
             builder.AddInterceptors(interceptor);
         return builder.Options;

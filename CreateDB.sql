@@ -30,15 +30,17 @@ BEGIN
     FROM (VALUES
         (N'Users'), (N'Subjects'), (N'Decks'), (N'Questions'), (N'Answers'),
         (N'QuizAttempts'), (N'TestHistories'), (N'TestResultDetails'),
-        (N'QuestionReports'), (N'LoginAttempts')) expected(Name)
+        (N'QuestionReports'), (N'LoginAttempts'), (N'FlashcardProgresses')) expected(Name)
     WHERE OBJECT_ID(N'dbo.' + expected.Name, N'U') IS NULL;
 
     IF COL_LENGTH(N'dbo.TestHistories', N'QuizAttemptId') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.TestHistories.QuizAttemptId');
     IF COL_LENGTH(N'dbo.TestHistories', N'ResultSnapshotJson') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.TestHistories.ResultSnapshotJson');
     IF COL_LENGTH(N'dbo.Users', N'NormalizedEmail') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.Users.NormalizedEmail');
     IF COL_LENGTH(N'dbo.Users', N'NormalizedUsername') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.Users.NormalizedUsername');
+    IF COL_LENGTH(N'dbo.Users', N'EmailConfirmed') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.Users.EmailConfirmed');
     IF COL_LENGTH(N'dbo.Decks', N'NormalizedName') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.Decks.NormalizedName');
     IF COL_LENGTH(N'dbo.Questions', N'RowVersion') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.Questions.RowVersion');
+    IF COL_LENGTH(N'dbo.LoginAttempts', N'CountsTowardLockout') IS NULL INSERT INTO @MissingRequiredObjects VALUES (N'Column dbo.LoginAttempts.CountsTowardLockout');
 
     INSERT INTO @MissingRequiredObjects
     SELECT N'Index dbo.' + expected.TableName + N'.' + expected.IndexName
@@ -52,7 +54,10 @@ BEGIN
         (N'TestHistories', N'IX_TestHistories_UserId_CreatedAt'),
         (N'TestHistories', N'IX_TestHistories_DeckId_Percentage_CreatedAt'),
         (N'QuestionReports', N'IX_QuestionReports_IsResolved_CreatedAt'),
-        (N'LoginAttempts', N'IX_LoginAttempts_IsSuccess_CreatedAt')) expected(TableName, IndexName)
+        (N'LoginAttempts', N'IX_LoginAttempts_IsSuccess_CreatedAt'),
+        (N'LoginAttempts', N'IX_LoginAttempts_Email_IpAddress_CreatedAt'),
+        (N'FlashcardProgresses', N'UX_FlashcardProgresses_UserId_QuestionId'),
+        (N'FlashcardProgresses', N'IX_FlashcardProgresses_UserId_NextReviewAtUtc')) expected(TableName, IndexName)
     WHERE NOT EXISTS (
         SELECT 1
         FROM sys.indexes actual
@@ -72,7 +77,10 @@ BEGIN
         (N'CK_Questions_QuestionType'),
         (N'CK_TestHistories_Score'),
         (N'CK_TestHistories_Percentage'),
-        (N'CK_QuestionReports_Reason')) expected(Name)
+        (N'CK_QuestionReports_Reason'),
+        (N'CK_FlashcardProgresses_Repetition'),
+        (N'CK_FlashcardProgresses_IntervalMinutes'),
+        (N'CK_FlashcardProgresses_EaseFactor')) expected(Name)
     WHERE NOT EXISTS (
         SELECT 1
         FROM sys.check_constraints actual
@@ -119,6 +127,7 @@ CREATE TABLE Users (
     -- Role/Profile/Security fields (merged from Phase 2)
     AvatarUrl NVARCHAR(500) NULL,
     IsDisabled BIT NOT NULL DEFAULT 0,
+    EmailConfirmed BIT NOT NULL DEFAULT 0,
     SecurityStamp NVARCHAR(450) NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt DATETIME2 NULL,
@@ -271,12 +280,36 @@ CREATE TABLE LoginAttempts (
     Email NVARCHAR(256) NOT NULL,
     IpAddress NVARCHAR(50) NOT NULL,
     IsSuccess BIT NOT NULL,
+    CountsTowardLockout BIT NOT NULL DEFAULT 0,
     UserId NVARCHAR(450) NULL,               -- NULL nếu email không tồn tại
     CreatedAt DATETIME2(7) NOT NULL DEFAULT GETUTCDATE(),
     CONSTRAINT FK_LoginAttempts_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
 CREATE INDEX IX_LoginAttempts_IsSuccess_CreatedAt
     ON LoginAttempts(IsSuccess, CreatedAt DESC);
+CREATE INDEX IX_LoginAttempts_Email_IpAddress_CreatedAt
+    ON LoginAttempts(Email, IpAddress, CreatedAt DESC);
+
+-- 11. Tiến độ spaced repetition của từng người dùng/câu hỏi
+CREATE TABLE FlashcardProgresses (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UserId NVARCHAR(450) NOT NULL,
+    QuestionId INT NOT NULL,
+    Repetition INT NOT NULL DEFAULT 0,
+    IntervalMinutes INT NOT NULL DEFAULT 10,
+    EaseFactor FLOAT NOT NULL DEFAULT 2.5,
+    LastReviewedAtUtc DATETIME2(7) NOT NULL,
+    NextReviewAtUtc DATETIME2(7) NOT NULL,
+    CONSTRAINT FK_FlashcardProgresses_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_FlashcardProgresses_Questions FOREIGN KEY (QuestionId) REFERENCES Questions(Id) ON DELETE CASCADE,
+    CONSTRAINT CK_FlashcardProgresses_Repetition CHECK (Repetition >= 0),
+    CONSTRAINT CK_FlashcardProgresses_IntervalMinutes CHECK (IntervalMinutes >= 1),
+    CONSTRAINT CK_FlashcardProgresses_EaseFactor CHECK (EaseFactor BETWEEN 1.3 AND 3.0)
+);
+CREATE UNIQUE INDEX UX_FlashcardProgresses_UserId_QuestionId
+    ON FlashcardProgresses(UserId, QuestionId);
+CREATE INDEX IX_FlashcardProgresses_UserId_NextReviewAtUtc
+    ON FlashcardProgresses(UserId, NextReviewAtUtc);
 
 COMMIT TRANSACTION;
 PRINT N'QuizManagementDB schema was created successfully.';

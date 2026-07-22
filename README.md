@@ -2,17 +2,17 @@
 
 Ứng dụng web quản lý và luyện tập câu hỏi trắc nghiệm, được xây dựng bằng ASP.NET Core MVC và SQL Server cho final project PRN222.
 
-> Trạng thái kiểm tra gần nhất: .NET SDK 9.0.313, Release build `0 warning / 0 error`, `114/114` test đạt.
+> Trạng thái kiểm tra gần nhất: .NET SDK 9.0.313, Release build `0 warning / 0 error`, `120/120` test đạt.
 
 ## Tính năng chính
 
 - Quản lý học liệu theo cấu trúc **Môn học → Bộ đề → Câu hỏi → Đáp án**.
 - Hỗ trợ câu hỏi một hoặc nhiều đáp án đúng, Markdown và soft delete.
 - Làm quiz có trộn câu, giới hạn thời gian, lưu lượt làm, kết quả và lịch sử chi tiết.
-- Học bằng flashcard và xem thống kê cá nhân hoặc thống kê nội dung.
+- Học bằng flashcard với lịch ôn spaced repetition lưu trong database; xem thống kê cá nhân hoặc thống kê nội dung.
 - Import câu hỏi từ `.xlsx` hoặc Aiken text; export bộ đề ra `.docx` và `.pdf` Unicode.
 - Báo cáo câu hỏi có vấn đề và theo dõi trạng thái xử lý.
-- Cookie authentication, phân quyền `Admin` / `Mentor` / `User`, rate limiting và nhật ký đăng nhập.
+- Cookie authentication, xác minh email, quên/đặt lại mật khẩu, phân quyền `Admin` / `Mentor` / `User`, rate limiting và khóa đăng nhập lưu bền vững.
 - Admin quản lý tài khoản, vai trò, trạng thái hoạt động và học liệu toàn hệ thống.
 
 ## Công nghệ
@@ -77,6 +77,8 @@ Script có ba hành vi rõ ràng:
 
 Project dùng `CreateDB.sql` làm nguồn schema chính, không yêu cầu chạy EF migration.
 
+Nếu đang dùng schema trước ngày 22/07/2026, chạy [UpgradeDB_20260722.sql](./UpgradeDB_20260722.sql) một lần để bổ sung xác minh email, khóa đăng nhập bền vững và tiến độ flashcard mà không xóa dữ liệu.
+
 ### 2. Cấu hình connection string
 
 Tạo file local từ mẫu:
@@ -109,6 +111,8 @@ Windows Authentication:
 ```
 
 `appsettings.Local.json` đã được Git ignore. Không commit connection string hoặc credential thật.
+
+Để gửi email thật, cấu hình section `Email` theo [appsettings.Local.example.json](./QuizManagement/appsettings.Local.example.json). Khi chạy môi trường Development mà chưa cấu hình `Email:Host`, liên kết xác minh và đặt lại mật khẩu được ghi vào log ứng dụng.
 
 ### 3. Restore, build và test
 
@@ -180,7 +184,7 @@ Nếu không dùng demo seed, có thể bật `AdminSeed` trong `appsettings.Loc
 }
 ```
 
-Mật khẩu phải dài 15–100 ký tự. Seed chỉ tạo tài khoản khi hệ thống chưa có Admin. Sau lần chạy đầu tiên, đặt `Enabled` về `false`.
+Mật khẩu phải dài 8–100 ký tự. Seed chỉ tạo tài khoản khi hệ thống chưa có Admin. Sau lần chạy đầu tiên, đặt `Enabled` về `false`.
 
 ## Phân quyền
 
@@ -200,13 +204,13 @@ Các ràng buộc quan trọng:
 
 ## Kiểm thử
 
-Test project hiện có 114 test, bao phủ:
+Test project hiện có 120 test, bao phủ:
 
 - Service và validation nghiệp vụ.
-- Controller, authorization, rate limiting và error handling.
+- Controller, authorization, token xác minh/đặt lại mật khẩu, khóa đăng nhập bền vững và error handling.
 - Quiz attempt, lịch sử và result snapshot.
 - Import atomicity, concurrency và unique constraints trên SQL Server.
-- Demo seed, UTC date/time, soft delete và quyền sở hữu dữ liệu.
+- Demo seed, spaced repetition flashcard, UTC date/time, soft delete và quyền sở hữu dữ liệu.
 - PDF Unicode và phản hồi lỗi trên Razor Views.
 
 Chạy lại toàn bộ:
@@ -215,19 +219,26 @@ Chạy lại toàn bộ:
 dotnet test QuizManagementSystem.slnx -c Release
 ```
 
-## Giới hạn hiện tại
+Integration tests mặc định dùng `(localdb)\MSSQLLocalDB`. Để dùng SQL Server khác,
+đặt connection string có quyền tạo/xóa database tạm trước khi chạy test:
 
-- Chưa tích hợp email verification hoặc quy trình quên/đặt lại mật khẩu.
-- Trạng thái khóa đăng nhập tạm thời nằm trong `IMemoryCache` và được reset khi ứng dụng restart; lịch sử đăng nhập vẫn được lưu trong database.
-- Flashcard spaced repetition chỉ tồn tại trong phiên học hiện tại.
-- Responsive mobile đã hỗ trợ cơ bản nhưng vẫn cần kiểm tra thủ công trên nhiều kích thước màn hình.
+```powershell
+$env:QUIZ_TEST_SQLSERVER_CONNECTION = `
+    (Get-Content .\QuizManagement\appsettings.Local.json | ConvertFrom-Json).ConnectionStrings.DefaultConnection
+dotnet test QuizManagementSystem.slnx -c Release
+```
+
+## Lưu ý vận hành
+
+- Production phải cấu hình SMTP và lưu bền vững ASP.NET Core Data Protection keys để các token vẫn hợp lệ khi restart hoặc chạy nhiều instance.
+- Responsive đã được kiểm tra trên viewport 320px, 375px và 1440px; nên chạy lại QA trên thiết bị mục tiêu khi thay đổi layout.
 
 ## Xử lý lỗi thường gặp
 
 - **Không kết nối được database:** kiểm tra SQL Server đang chạy và `DefaultConnection` trong `appsettings.Local.json`.
 - **`CreateDB.sql` báo `51020`/`51021`:** database đang có schema cũ hoặc không đầy đủ; với dữ liệu demo, reset database rồi chạy lại script.
 - **`SeedDemoData.sql` báo `51019`:** opt-in chưa được đặt trong đúng SQL session.
-- **Integration tests không kết nối được:** cài hoặc khởi động SQL Server LocalDB instance `MSSQLLocalDB`.
+- **Integration tests không kết nối được:** khởi động LocalDB `MSSQLLocalDB` hoặc đặt `QUIZ_TEST_SQLSERVER_CONNECTION` để dùng SQL Server khác.
 - **HTTPS certificate chưa được trust:** dùng profile `http`, hoặc chạy `dotnet dev-certs https --trust`.
 
 ## Ghi chú bảo mật

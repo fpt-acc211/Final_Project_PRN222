@@ -13,7 +13,7 @@ namespace QuizManagement.ViewModels.Profile
         [StringLength(
             PasswordPolicy.MaximumLength,
             MinimumLength = PasswordPolicy.MinimumLength,
-            ErrorMessage = "Mật khẩu mới phải có từ 15 đến 100 ký tự.")]
+            ErrorMessage = "Mật khẩu mới phải có từ 8 đến 100 ký tự.")]
         [DataType(DataType.Password)]
         public string NewPassword { get; set; } = string.Empty;
 

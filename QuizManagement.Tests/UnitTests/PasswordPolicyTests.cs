@@ -8,8 +8,8 @@ namespace QuizManagement.Tests.UnitTests;
 public class PasswordPolicyTests
 {
     [Theory]
-    [InlineData(14, false)]
-    [InlineData(15, true)]
+    [InlineData(7, false)]
+    [InlineData(8, true)]
     [InlineData(100, true)]
     [InlineData(101, false)]
     public void Register_ValidatesNewPasswordLength(int length, bool expectedValid)
@@ -27,8 +27,8 @@ public class PasswordPolicyTests
     }
 
     [Theory]
-    [InlineData(14, false)]
-    [InlineData(15, true)]
+    [InlineData(7, false)]
+    [InlineData(8, true)]
     public void ChangePassword_ValidatesOnlyTheNewPasswordPolicy(int length, bool expectedValid)
     {
         var password = new string('a', length);

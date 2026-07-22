@@ -8,11 +8,56 @@ public class DemoSeedSqlServerTests
 {
     [Fact]
     [Trait("Category", "SqlServerIntegration")]
+    public void UpgradeScript_PreservesLegacyUsersAndIsIdempotent()
+    {
+        var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
+        using var master = new SqlConnection(SqlServerTestConnection.ForDatabase("master"));
+        master.Open();
+        new SqlCommand($"CREATE DATABASE [{databaseName}]", master).ExecuteNonQuery();
+
+        try
+        {
+            using var database = new SqlConnection(SqlServerTestConnection.ForDatabase(databaseName));
+            database.Open();
+            new SqlCommand("""
+                CREATE TABLE dbo.Users (Id NVARCHAR(450) PRIMARY KEY, Email NVARCHAR(256) NOT NULL);
+                CREATE TABLE dbo.Questions (Id INT PRIMARY KEY);
+                CREATE TABLE dbo.LoginAttempts (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Email NVARCHAR(256) NOT NULL,
+                    IpAddress NVARCHAR(50) NOT NULL,
+                    IsSuccess BIT NOT NULL,
+                    UserId NVARCHAR(450) NULL,
+                    CreatedAt DATETIME2(7) NOT NULL,
+                    CONSTRAINT FK_LegacyLoginAttempts_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id));
+                INSERT INTO dbo.Users (Id, Email) VALUES (N'legacy', N'legacy@test.local');
+                INSERT INTO dbo.Questions (Id) VALUES (1);
+                """, database).ExecuteNonQuery();
+
+            ExecuteUpgrade(database, databaseName);
+            ExecuteUpgrade(database, databaseName);
+
+            Assert.Equal(1, Scalar(database, "SELECT CONVERT(INT, EmailConfirmed) FROM dbo.Users WHERE Id = N'legacy'"));
+            Assert.Equal(1, Scalar(database, "SELECT COUNT(*) FROM sys.tables WHERE name = N'FlashcardProgresses'"));
+            new SqlCommand("INSERT INTO dbo.Users (Id, Email) VALUES (N'new', N'new@test.local')", database)
+                .ExecuteNonQuery();
+            Assert.Equal(0, Scalar(database, "SELECT CONVERT(INT, EmailConfirmed) FROM dbo.Users WHERE Id = N'new'"));
+        }
+        finally
+        {
+            new SqlCommand(
+                $"ALTER DATABASE [{databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{databaseName}]",
+                master).ExecuteNonQuery();
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "SqlServerIntegration")]
     public void CreateScript_RejectsPartialSchemaWithoutMutation()
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
-        const string masterConnectionString = "Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True";
-        var databaseConnectionString = $"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True";
+        var masterConnectionString = SqlServerTestConnection.ForDatabase("master");
+        var databaseConnectionString = SqlServerTestConnection.ForDatabase(databaseName);
         using var master = new SqlConnection(masterConnectionString);
         master.Open();
         new SqlCommand($"CREATE DATABASE [{databaseName}]", master).ExecuteNonQuery();
@@ -41,8 +86,8 @@ public class DemoSeedSqlServerTests
     public void Seed_RequiresOptInAndRerunsAfterDemoActivityWithoutDeletingUnrelatedData()
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
-        const string masterConnectionString = "Server=(localdb)\\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True";
-        var databaseConnectionString = $"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True";
+        var masterConnectionString = SqlServerTestConnection.ForDatabase("master");
+        var databaseConnectionString = SqlServerTestConnection.ForDatabase(databaseName);
         using var master = new SqlConnection(masterConnectionString);
         master.Open();
 
@@ -157,6 +202,13 @@ public class DemoSeedSqlServerTests
         var path = RootFile("SeedDemoData.sql");
         var script = File.ReadAllText(path)
             .Replace("USE QuizManagementDB;", $"USE [{databaseName}];", StringComparison.Ordinal);
+        ExecuteBatches(database, script);
+    }
+
+    private static void ExecuteUpgrade(SqlConnection database, string databaseName)
+    {
+        var script = File.ReadAllText(RootFile("UpgradeDB_20260722.sql"))
+            .Replace("QuizManagementDB", databaseName, StringComparison.Ordinal);
         ExecuteBatches(database, script);
     }
 

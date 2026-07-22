@@ -15,6 +15,16 @@ namespace Services
         public IEnumerable<Question> GetQuestionsByDeckForStudy(int deckId)
             => _repository.GetQuestionsByDeckForStudy(deckId);
 
+        public IEnumerable<FlashcardProgress> GetFlashcardProgresses(string userId, int deckId)
+            => _repository.GetFlashcardProgresses(userId, deckId);
+
+        public FlashcardProgress ReviewFlashcard(
+            string userId,
+            int questionId,
+            bool remembered,
+            DateTime reviewedAtUtc)
+            => _repository.ReviewFlashcard(userId, questionId, remembered, reviewedAtUtc);
+
         public Question? GetQuestionById(int id, string userId, bool allowAll = false)
             => _repository.GetQuestionById(id, userId, allowAll);
 

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using QuizManagement.Controllers;
 using QuizManagement.Infrastructure;
+using QuizManagement.Tests.TestDoubles;
 using QuizManagement.ViewModels.Account;
 using Services;
 using Xunit;
@@ -79,7 +80,9 @@ public class AuthenticationRateLimitingTests
         var controller = new AccountController(
             new ThrowingUserService(),
             attempts,
-            new ThrowingLoginAttemptLogService())
+            new ThrowingLoginAttemptLogService(),
+            AccountSecurityFakes.Tokens(),
+            new EmailSenderFake())
         {
             ControllerContext = new ControllerContext { HttpContext = context }
         };
@@ -98,20 +101,11 @@ public class AuthenticationRateLimitingTests
     {
         public string? LastIpAddress { get; private set; }
 
-        public bool IsLockedOut(string email, string ipAddress)
+        public TimeSpan? GetRemainingLockoutTime(string email, string ipAddress)
         {
             LastIpAddress = ipAddress;
-            return true;
+            return TimeSpan.FromMinutes(1);
         }
-
-        public TimeSpan? GetRemainingLockoutTime(string email, string ipAddress)
-            => TimeSpan.FromMinutes(1);
-
-        public void RecordFailedAttempt(string email, string ipAddress)
-            => throw new NotSupportedException();
-
-        public void ClearAttempts(string email, string ipAddress)
-            => throw new NotSupportedException();
     }
 
     private sealed class ThrowingUserService : IUserService

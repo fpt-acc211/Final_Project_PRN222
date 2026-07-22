@@ -8,6 +8,14 @@ namespace QuizManagement.ViewModels.Flashcards
 
         public string SubjectName { get; set; } = string.Empty;
 
+        public int TotalCards { get; set; }
+
+        public int DueCards { get; set; }
+
+        public bool StudyingAll { get; set; }
+
+        public DateTime? NextReviewAtUtc { get; set; }
+
         public List<FlashcardViewModel> Cards { get; set; } = new();
     }
 

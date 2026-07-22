@@ -6,23 +6,49 @@
     var json = JsonSerializer.Serialize(Model.Cards, new JsonSerializerOptions { Encoder = JavaScriptEncoder.Default });
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header">
     <div>
         <h1 class="h3 mb-1">Flashcard</h1>
         <p class="text-muted mb-0">@Model.SubjectName / @Model.DeckName</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="page-header-actions">
         <a asp-controller="Quiz" asp-action="Config" asp-route-deckId="@Model.DeckId" class="btn btn-outline-success">Làm quiz</a>
         <a asp-controller="Questions" asp-action="Index" asp-route-deckId="@Model.DeckId" class="btn btn-outline-secondary">Câu hỏi</a>
     </div>
 </div>
 
-@if (!Model.Cards.Any())
+@if (Model.TotalCards == 0)
 {
     <div class="alert alert-info">Bộ đề này chưa có câu hỏi để học flashcard.</div>
 }
+else if (!Model.Cards.Any())
+{
+    <div class="alert alert-success">
+        <div class="fw-semibold">Bạn đã hoàn thành các thẻ đến hạn.</div>
+        @if (Model.NextReviewAtUtc is DateTime nextReview)
+        {
+            <div class="small mt-1">Lần ôn tiếp theo: @nextReview.ToString("dd/MM/yyyy HH:mm") UTC.</div>
+        }
+    </div>
+    <a asp-action="Study" asp-route-deckId="@Model.DeckId" asp-route-all="true" class="btn btn-outline-primary">
+        Học lại tất cả @Model.TotalCards thẻ
+    </a>
+}
 else
 {
+    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3 flashcard-summary">
+        <span class="text-muted small">
+            @(Model.StudyingAll ? $"Đang học tất cả {Model.TotalCards} thẻ" : $"{Model.DueCards} thẻ đến hạn")
+        </span>
+        @if (!Model.StudyingAll && Model.DueCards < Model.TotalCards)
+        {
+            <a asp-action="Study" asp-route-deckId="@Model.DeckId" asp-route-all="true" class="btn btn-sm btn-outline-secondary">
+                Học tất cả
+            </a>
+        }
+    </div>
+    <form id="flashcardReviewToken" class="d-none">@Html.AntiForgeryToken()</form>
+    <div id="flashcardSaveError" class="alert alert-danger d-none" role="alert" aria-live="polite"></div>
     <div id="flashcardApp" class="flashcard-study mx-auto">
         <div class="flashcard-toolbar">
             <button type="button" id="prevCardButton" class="btn btn-outline-secondary">Trước</button>
@@ -117,6 +143,8 @@ else
             const nextCardButton = document.getElementById('nextCardButton');
             const cardCounter = document.getElementById('cardCounter');
             const studyCounter = document.getElementById('studyCounter');
+            const saveError = document.getElementById('flashcardSaveError');
+            const requestVerificationToken = document.querySelector('#flashcardReviewToken input').value;
 
             const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
@@ -243,11 +271,37 @@ else
                 renderCard();
             }
 
-            function markAndMove(isKnown) {
+            async function persistReview(questionId, remembered) {
+                const response = await fetch('@Url.Action("Review", "Flashcards")', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                        'RequestVerificationToken': requestVerificationToken
+                    },
+                    body: new URLSearchParams({
+                        deckId: '@Model.DeckId',
+                        questionId: String(questionId),
+                        remembered: String(remembered)
+                    })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            }
+
+            async function markAndMove(isKnown) {
                 if (isAnimating) return;
                 isAnimating = true;
 
                 const cardId = cards[currentIndex].QuestionId;
+                try {
+                    await persistReview(cardId, isKnown);
+                    saveError.classList.add('d-none');
+                } catch {
+                    saveError.textContent = 'Không thể lưu tiến độ. Vui lòng kiểm tra kết nối và thử lại.';
+                    saveError.classList.remove('d-none');
+                    isAnimating = false;
+                    return;
+                }
                 cardStatus.set(cardId, isKnown ? 'known' : 'again');
 
                 // Update counters immediately for instant visual feedback

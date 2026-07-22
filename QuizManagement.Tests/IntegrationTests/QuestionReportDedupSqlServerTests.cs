@@ -122,7 +122,7 @@ public class QuestionReportDedupSqlServerTests
         DbCommandInterceptor? interceptor = null)
     {
         var builder = new DbContextOptionsBuilder<QuizManagementDbContext>()
-            .UseSqlServer($"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True");
+            .UseSqlServer(SqlServerTestConnection.ForDatabase(databaseName));
         if (interceptor is not null)
             builder.AddInterceptors(interceptor);
         return builder.Options;

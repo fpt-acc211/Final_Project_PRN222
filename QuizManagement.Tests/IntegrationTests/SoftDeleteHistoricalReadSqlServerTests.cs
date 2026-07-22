@@ -13,7 +13,7 @@ public class SoftDeleteHistoricalReadSqlServerTests
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
         var options = new DbContextOptionsBuilder<QuizManagementDbContext>()
-            .UseSqlServer($"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer(SqlServerTestConnection.ForDatabase(databaseName))
             .Options;
 
         using var context = new QuizManagementDbContext(options);

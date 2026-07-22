@@ -32,4 +32,6 @@ public partial class Question
     public virtual Deck Deck { get; set; } = null!;
 
     public virtual ICollection<TestResultDetail> TestResultDetails { get; set; } = new List<TestResultDetail>();
+
+    public virtual ICollection<FlashcardProgress> FlashcardProgresses { get; set; } = new List<FlashcardProgress>();
 }

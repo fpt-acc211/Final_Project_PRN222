@@ -36,6 +36,8 @@ public partial class QuizManagementDbContext : DbContext
 
     public virtual DbSet<QuizAttempt> QuizAttempts { get; set; }
 
+    public virtual DbSet<FlashcardProgress> FlashcardProgresses { get; set; }
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>()
@@ -104,6 +106,33 @@ public partial class QuizManagementDbContext : DbContext
             entity.HasOne(d => d.Deck).WithMany(p => p.Questions)
                 .HasForeignKey(d => d.DeckId)
                 .HasConstraintName("FK_Questions_Decks");
+        });
+
+        modelBuilder.Entity<FlashcardProgress>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_FlashcardProgresses_Repetition", "[Repetition] >= 0");
+                table.HasCheckConstraint("CK_FlashcardProgresses_IntervalMinutes", "[IntervalMinutes] >= 1");
+                table.HasCheckConstraint("CK_FlashcardProgresses_EaseFactor", "[EaseFactor] BETWEEN 1.3 AND 3.0");
+            });
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.IntervalMinutes).HasDefaultValue(10);
+            entity.Property(e => e.EaseFactor).HasDefaultValue(2.5);
+
+            entity.HasIndex(e => new { e.UserId, e.QuestionId }, "UX_FlashcardProgresses_UserId_QuestionId")
+                .IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.NextReviewAtUtc }, "IX_FlashcardProgresses_UserId_NextReviewAtUtc");
+
+            entity.HasOne(e => e.User).WithMany(e => e.FlashcardProgresses)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_FlashcardProgresses_Users");
+            entity.HasOne(e => e.Question).WithMany(e => e.FlashcardProgresses)
+                .HasForeignKey(e => e.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_FlashcardProgresses_Questions");
         });
 
         modelBuilder.Entity<Subject>(entity =>
@@ -243,6 +272,7 @@ public partial class QuizManagementDbContext : DbContext
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
             entity.Property(e => e.SecurityStamp).HasMaxLength(450);
             entity.Property(e => e.IsDisabled).HasDefaultValue(false);
+            entity.Property(e => e.EmailConfirmed).HasDefaultValue(false);
 
             entity.HasIndex("NormalizedEmail")
                 .IsUnique()
@@ -291,10 +321,15 @@ public partial class QuizManagementDbContext : DbContext
             entity.Property(e => e.IpAddress).HasMaxLength(50);
             entity.Property(e => e.UserId).HasMaxLength(450);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
+            entity.Property(e => e.CountsTowardLockout).HasDefaultValue(false);
             entity.HasIndex(
                     e => new { e.IsSuccess, e.CreatedAt },
                     "IX_LoginAttempts_IsSuccess_CreatedAt")
                 .IsDescending(false, true);
+            entity.HasIndex(
+                    e => new { e.Email, e.IpAddress, e.CreatedAt },
+                    "IX_LoginAttempts_Email_IpAddress_CreatedAt")
+                .IsDescending(false, false, true);
 
             entity.HasOne(e => e.User).WithMany()
                 .HasForeignKey(e => e.UserId)

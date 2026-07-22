@@ -39,6 +39,37 @@ namespace DataAccessObjects
                 .ToList();
         }
 
+        public IEnumerable<FlashcardProgress> GetFlashcardProgresses(
+            QuizManagementDbContext context,
+            string userId,
+            int deckId)
+        {
+            return context.FlashcardProgresses
+                .AsNoTracking()
+                .Where(progress => progress.UserId == userId && progress.Question.DeckId == deckId)
+                .ToList();
+        }
+
+        public FlashcardProgress ReviewFlashcard(
+            QuizManagementDbContext context,
+            string userId,
+            int questionId,
+            bool remembered,
+            DateTime reviewedAtUtc)
+        {
+            var progress = context.FlashcardProgresses
+                .SingleOrDefault(item => item.UserId == userId && item.QuestionId == questionId);
+            if (progress is null)
+            {
+                progress = new FlashcardProgress { UserId = userId, QuestionId = questionId };
+                context.FlashcardProgresses.Add(progress);
+            }
+
+            progress.Review(remembered, reviewedAtUtc);
+            context.SaveChanges();
+            return progress;
+        }
+
         public Question? GetQuestionById(
             QuizManagementDbContext context, int id, string userId, bool allowAll = false)
         {

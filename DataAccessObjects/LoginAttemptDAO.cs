@@ -46,4 +46,21 @@ public class LoginAttemptDAO
             .Take(Math.Clamp(count, 1, 1000))
             .ToListAsync();
     }
+
+    public List<LoginAttempt> GetRecentForLockout(
+        QuizManagementDbContext context,
+        string email,
+        string ipAddress,
+        DateTime sinceUtc,
+        int count)
+    {
+        return context.LoginAttempts
+            .AsNoTracking()
+            .Where(attempt => attempt.Email == email
+                && attempt.IpAddress == ipAddress
+                && attempt.CreatedAt >= sinceUtc)
+            .OrderByDescending(attempt => attempt.CreatedAt)
+            .Take(count)
+            .ToList();
+    }
 }

@@ -47,8 +47,10 @@ builder.Services.AddScoped<ILoginAttemptLogService, LoginAttemptLogService>();
 builder.Services.AddSingleton<IDeckExportService, DeckExportService>();
 
 // 4. Infrastructure (web-tier)
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<ILoginAttemptService, LoginAttemptService>();
+builder.Services.AddScoped<ILoginAttemptService, LoginAttemptService>();
+builder.Services.AddSingleton<AccountTokenService>();
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -107,7 +109,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                 var user = userService.GetById(userId);
 
                 // Reject if user deleted or disabled
-                if (user is null || user.IsDisabled)
+                if (user is null || user.IsDisabled || !user.EmailConfirmed)
                 {
                     context.RejectPrincipal();
                     return Task.CompletedTask;
@@ -146,7 +148,7 @@ if (builder.Configuration.GetValue<bool>("AdminSeed:Enabled"))
         password == "replace-with-a-strong-password")
     {
         throw new InvalidOperationException(
-            "AdminSeed được bật nhưng Username, Email hoặc Password (15–100 ký tự) chưa hợp lệ.");
+            "AdminSeed được bật nhưng Username, Email hoặc Password (8–100 ký tự) chưa hợp lệ.");
     }
 
     try
@@ -168,6 +170,7 @@ if (builder.Configuration.GetValue<bool>("AdminSeed:Enabled"))
                 Email = email,
                 Role = AppRoles.Admin,
                 IsDisabled = false,
+                EmailConfirmed = true,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 CreatedAt = DateTime.UtcNow
             };

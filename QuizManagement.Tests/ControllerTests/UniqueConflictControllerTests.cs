@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using QuizManagement.Controllers;
 using QuizManagement.Infrastructure;
+using QuizManagement.Tests.TestDoubles;
 using QuizManagement.ViewModels.Account;
 using QuizManagement.ViewModels.Decks;
 using Services;
@@ -16,15 +17,17 @@ public class UniqueConflictControllerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void Register_MapsConcurrentUniqueConflictToAGenericError(bool emailConflict)
+    public async Task Register_MapsConcurrentUniqueConflictToAGenericError(bool emailConflict)
     {
         var userService = new UserServiceFake(emailConflict);
         var controller = new AccountController(
             userService,
             new LoginAttemptServiceFake(),
-            new LoginAttemptLogServiceFake());
+            new LoginAttemptLogServiceFake(),
+            AccountSecurityFakes.Tokens(),
+            new EmailSenderFake());
 
-        var result = controller.Register(new RegisterViewModel
+        var result = await controller.Register(new RegisterViewModel
         {
             Email = "new@test.local",
             Username = "new-user",
@@ -46,15 +49,17 @@ public class UniqueConflictControllerTests
     }
 
     [Fact]
-    public void Register_UsesTheSameGenericErrorForAnExistingIdentity()
+    public async Task Register_UsesTheSameGenericErrorForAnExistingIdentity()
     {
         var userService = new UserServiceFake(emailConflict: true, existingBeforeWrite: true);
         var controller = new AccountController(
             userService,
             new LoginAttemptServiceFake(),
-            new LoginAttemptLogServiceFake());
+            new LoginAttemptLogServiceFake(),
+            AccountSecurityFakes.Tokens(),
+            new EmailSenderFake());
 
-        var result = controller.Register(new RegisterViewModel
+        var result = await controller.Register(new RegisterViewModel
         {
             Email = "existing@test.local",
             Username = "new-user",
@@ -132,10 +137,7 @@ public class UniqueConflictControllerTests
 
     private sealed class LoginAttemptServiceFake : ILoginAttemptService
     {
-        public bool IsLockedOut(string email, string ipAddress) => false;
         public TimeSpan? GetRemainingLockoutTime(string email, string ipAddress) => null;
-        public void RecordFailedAttempt(string email, string ipAddress) => throw new NotSupportedException();
-        public void ClearAttempts(string email, string ipAddress) => throw new NotSupportedException();
     }
 
     private sealed class LoginAttemptLogServiceFake : ILoginAttemptLogService

@@ -13,7 +13,7 @@ public class UtcDateTimeSqlServerTests
     {
         var databaseName = $"QuizManagementTests_{Guid.NewGuid():N}";
         var options = new DbContextOptionsBuilder<QuizManagementDbContext>()
-            .UseSqlServer($"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer(SqlServerTestConnection.ForDatabase(databaseName))
             .Options;
         var clockValue = new DateTime(2026, 7, 16, 9, 30, 0, DateTimeKind.Unspecified);
 

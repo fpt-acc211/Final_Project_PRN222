@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using QuizManagement.Controllers;
 using QuizManagement.Infrastructure;
+using QuizManagement.Tests.TestDoubles;
 using QuizManagement.ViewModels.Account;
 using Services;
 using Xunit;
@@ -28,6 +29,7 @@ public class PasswordCompatibilityTests
             Username = "legacy-user",
             Email = "legacy@test.local",
             Role = AppRoles.User,
+            EmailConfirmed = true,
             SecurityStamp = Guid.NewGuid().ToString()
         };
         user.PasswordHash = new PasswordHasher<User>().HashPassword(user, oldPassword);
@@ -39,7 +41,9 @@ public class PasswordCompatibilityTests
         var controller = new AccountController(
             new UserServiceFake(user),
             new LoginAttemptServiceFake(),
-            new LoginAttemptLogServiceFake())
+            new LoginAttemptLogServiceFake(),
+            AccountSecurityFakes.Tokens(),
+            new EmailSenderFake())
         {
             ControllerContext = new ControllerContext
             {
@@ -73,10 +77,7 @@ public class PasswordCompatibilityTests
 
     private sealed class LoginAttemptServiceFake : ILoginAttemptService
     {
-        public bool IsLockedOut(string email, string ipAddress) => false;
         public TimeSpan? GetRemainingLockoutTime(string email, string ipAddress) => null;
-        public void RecordFailedAttempt(string email, string ipAddress) => throw new NotSupportedException();
-        public void ClearAttempts(string email, string ipAddress) { }
     }
 
     private sealed class LoginAttemptLogServiceFake : ILoginAttemptLogService
